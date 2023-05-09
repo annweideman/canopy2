@@ -7,16 +7,16 @@
 #-------------------------------------------------------------------------------
 
 dist_metric_fun <- function(truth, inferred){
-  
+
   # Find the maximum number of columns
   max.ncol <- max(ncol(truth),ncol(inferred))
-  
+
   # Store all possible permutations of column numbers
   perms <- gtools::permutations(n=max.ncol,r=max.ncol,v=1:max.ncol)
   # If the matrices differ in size, then remove the overage from the
   # permutations
   perms <- perms[,1:min(ncol(inferred),ncol(truth))]
-  
+
   # Generate all columnwise permutations of the matrix with the most number
   # of columns
   # If number of columns in the inference exceeds or equals the number of
@@ -33,13 +33,13 @@ dist_metric_fun <- function(truth, inferred){
     mat.dist <- lapply(1:length(mat.perms), function(x)
       sum(colSums(abs(mat.perms[[x]]-inferred))))
   }
-  
+
   # Compute the minimum distance metric
   dist.metric <- min(unlist(mat.dist))
-  
+
   # Store the permutation corresponding to the minimum distance metric
   mat.perm.min <- mat.perms[[which.min(unlist(mat.dist))]]
-  
+
   return(list(dist.metric=dist.metric,mat.perm.min=mat.perm.min))
 }
 
@@ -47,7 +47,7 @@ dist_metric_fun <- function(truth, inferred){
 # Function to compute absolute reconstruction error
 #-------------------------------------------------------------------------------
 are_fun <- function(true.tree, inferred.tree){
-  
+
   N<-ncol(inferred.tree$Ps)
   #--------------------------------------------------------------
   # Transpose when needed to have subclones as columns
@@ -55,7 +55,7 @@ are_fun <- function(true.tree, inferred.tree){
   true.Z <- true.tree$Z; inferred.Z <- inferred.tree$Z
   true.Ps <- t(true.tree$Ps); inferred.Ps <- t(inferred.tree$Ps)
   true.Pb <- t(true.tree$Pb); inferred.Pb <- t(inferred.tree$Pb)
-  
+
   #-------------------------------------------
   # Compute distance metric for each component
   #-------------------------------------------
@@ -64,13 +64,13 @@ are_fun <- function(true.tree, inferred.tree){
   out.dist.Pb <- dist_metric_fun(truth=true.Pb, inferred=inferred.Pb)
   dist.Pb <- out.dist.Pb$dist.metric
   perm.min.Pb <- out.dist.Pb$mat.perm.min
-  
+
   #--------------------------------------------------------------
   # Compute extra error from additional column(s), if applicable
   #--------------------------------------------------------------
   ### Extra error for Z
   ncol.diff.Z <- abs(ncol(inferred.Z)-ncol(true.Z))
-  
+
   # If number of columns in the inference differs from number of columns in
   # the truth
   if(ncol.diff.Z!=0){
@@ -79,10 +79,10 @@ are_fun <- function(true.tree, inferred.tree){
     e.Z <- M*ncol.diff.Z
     # Otherwise, set error due to extra columns to 0
   }else{e.Z <- 0}
-  
+
   ### Extra error for Ps
   ncol.diff.Ps <- abs(ncol(inferred.Ps)-ncol(true.Ps))
-  
+
   # If number of columns in the inference differs from number of columns in
   # the truth
   if(ncol.diff.Ps!=0){
@@ -91,14 +91,14 @@ are_fun <- function(true.tree, inferred.tree){
     e.Ps <- N*ncol.diff.Ps
     # Otherwise, set error due to extra columns to 0
   }else{e.Ps <- 0}
-  
+
   ### Extra error for Pb
   ncol.diff.Pb <- abs(ncol(inferred.Pb)-ncol(true.Pb))
-  
+
   # If number of columns in the inference differs from number of columns in
   # the truth
   if(ncol.diff.Pb!=0){
-    
+
     # Add additional error that is equal to the sum of the elements in the extra
     # column(s)
     if(ncol(inferred.Pb)>ncol(true.Pb)){
@@ -106,28 +106,28 @@ are_fun <- function(true.tree, inferred.tree){
     }else{
       e.Pb <- sum(perm.min.Pb[,!(data.frame(perm.min.Pb) %in% data.frame(inferred.Pb))])
     }
-    
+
     # Otherwise, set error due to extra columns to 0
   }else{e.Pb <- 0}
-  
+
   #-------------------------------------------
   # Estimate the ARE for each component
   #-------------------------------------------
-  
+
   are.Z <- dist.Z+e.Z
   are.Ps <- dist.Ps+e.Ps
   are.Pb <- dist.Pb+e.Pb
-  
+
   #-------------------------------------------
   # Convert the estimated AREs to percentages
   #-------------------------------------------
-  
+
   are.Z <- are.Z/max(prod(dim(inferred.Z)),prod(dim(true.Z)))*100
   are.Ps <- are.Ps/max(prod(dim(inferred.Ps)),prod(dim(true.Ps)))*100
   are.Pb <- are.Pb/(2*max(nrow(inferred.Pb), nrow(true.Pb)))*100
-  
+
   return(list(are.Z=are.Z, are.Ps=are.Ps, are.Pb=are.Pb))
-  
+
 }
 
 #-------------------------------------------------------------------------------
@@ -135,7 +135,7 @@ are_fun <- function(true.tree, inferred.tree){
 #-------------------------------------------------------------------------------
 
 are_z_fun <- function(true.Z, inferred.Z){
-  
+
   # Check for duplicated columns in inferred Z and remove if present ONLY
   # if inference is larger than truth (i.e., number of columns in inference
   # exceeds number of columns in truth)
@@ -145,21 +145,21 @@ are_z_fun <- function(true.Z, inferred.Z){
     # Remove duplicates
     inferred.Z <- inferred.Z[,-id.Z.dup]
   }
-  
+
   M <- nrow(inferred.Z)
   K <- ncol(inferred.Z)
-  
+
   #--------------------------------
   # Compute distance metric for Z
   #--------------------------------
   dist.Z <- dist_metric_fun(truth=true.Z, inferred=inferred.Z)$dist.metric
-  
+
   #--------------------------------------------------------------
   # Compute extra error from additional column(s), if applicable
   #--------------------------------------------------------------
   # Extra error for Z
   ncol.diff.Z <- abs(ncol(inferred.Z)-ncol(true.Z))
-  
+
   # If number of columns in the inference differs from number of columns in
   # the truth
   if(ncol.diff.Z!=0){
@@ -168,20 +168,20 @@ are_z_fun <- function(true.Z, inferred.Z){
     e.Z <- M*ncol.diff.Z
     # Otherwise, set error due to extra columns to 0
   }else{e.Z <- 0}
-  
+
   #-------------------------
   # Estimate the ARE for Z
   #-------------------------
-  
+
   are.Z <- dist.Z+e.Z
-  
+
   #--------------------------------------------------
   # Convert the estimated ARE for Z to a percentage
   #--------------------------------------------------
-  
+
   # Divide by the total number of positions in the largest matrix
   are.Z <- are.Z/max(prod(dim(true.Z)),prod(dim(inferred.Z)))*100
-  
+
   are.Z
 }
 
@@ -190,26 +190,26 @@ are_z_fun <- function(true.Z, inferred.Z){
 #-------------------------------------------------------------------------------
 dic_fun <- function(logPost.mean, Z.mean, Ps.mean, Pb.mean, Rb,
                     Xb, Rs, Xs, alpha, beta, kappa, tau) {
-  
+
   # Mixture of beta-binomial likelihoods for the single cell data
   Qs <- Z.mean%*%Ps.mean
   logPost <- sum((logdBetaBinom(Rs, Xs, alpha, beta))*Qs+
                    (logdBetaBinom(Rs, Xs, kappa, tau))*(1-Qs))
-  
+
   # Combine with binomial likelihood (written up to a proportionality constant)
   # for the bulk data
   Qb <- pmin(pmax(1/2*Z.mean%*%Pb.mean, 0.01),0.99)
   logPost <- logPost+sum(Rb*log(Qb)+(Xb-Rb)*log(1-Qb))
-  
+
   #logPost.mean <- mean(sapply(1:length(samples$tree), function(x)
-  #                     getPost(samples$tree[[x]], Rb, Xb, Rs, Xs, 
+  #                     getPost(samples$tree[[x]], Rb, Xb, Rs, Xs,
   #                             alpha, beta, kappa, tau)))
-  
+
   # Effective number of parameters
   pD <- -2*logPost.mean-(-2*logPost)
   # Spiegelhalter defn of DIC
-  DIC <- -2*logPost+2*pD 
-  
+  DIC <- -2*logPost+2*pD
+
   return(DIC)
 }
 
@@ -233,86 +233,86 @@ flatten_list <- function(x){
 #-------------------------------------------------------------------------------
 
 get_gene_expression <- function(featurecounts, build){
-  
+
   # Map Ensembl IDs to gene symbols
-  ensembl <- biomaRt::useEnsembl(biomart="ensembl", 
-                                 dataset="hsapiens_gene_ensembl", 
+  ensembl <- biomaRt::useEnsembl(biomart="ensembl",
+                                 dataset="hsapiens_gene_ensembl",
                                  GRCh=build)
   gene.names <- rownames(featurecounts)
   bm.out <- biomaRt::getBM(filters= "ensembl_gene_id",
                            attributes= c("ensembl_gene_id","hgnc_symbol"),
                            values=gene.names, mart=ensembl)
-  
+
   # Remove any duplicates for Ensembl ID
   # Note: Ensembl arbitrarily picks a HGNC synonym for the summary if repeat
   # Ensembl IDs
   bm.out <- bm.out[!duplicated(bm.out$ensembl_gene_id), ]
   rownames(bm.out) <- bm.out$ensembl_gene_id
-  
+
   # Merge with gene expression data
   featurecounts <- merge(bm.out,featurecounts,by="row.names",all=T)[,-1]
-  
+
   featurecounts
-  
+
 }
 
 #-------------------------------------------------------------------------------
 # Compute the posterior density
 #-------------------------------------------------------------------------------
 getPost=function(tree, Rb, Xb, Rs, Xs, alpha, beta, kappa, tau){
-  
+
   # Mixture of beta-binomial likelihoods for the single-cell data
   Qs=tree$Z%*%tree$Ps
   logPost=sum((logdBetaBinom(Rs, Xs, alpha, beta))*Qs+
                 (logdBetaBinom(Rs, Xs, kappa, tau))*(1-Qs))
-  
+
   # Combine with binomial likelihood (written up to a proportionality constant)
   # for the bulk data
   Qb=pmin(pmax(1/2*tree$Z%*%tree$Pb, 0.01),0.99)
   logPost=logPost+sum(lchoose(Xb,Rb) + Rb*log(Qb)+(Xb-Rb)*log(1-Qb))
   return(logPost)
-  
+
 }
 
 #-------------------------------------------------------------------------------
 # Generate binary clonal tree configuration matrix, Z
 #-------------------------------------------------------------------------------
 getZ <- function(tree) {
-  
+
   K <- (nrow(tree$edge) + 2)/2 #Number of clones
   M <- nrow(tree$snv) #Number of mutations
-  
+
   # Create a matrix of zeros
   Z <- matrix(nrow = M, ncol = K, data = 0)
   rownames(Z) <- rownames(tree$snv)
   colnames(Z) <- paste("clone", 1:K, sep = "")
-  
+
   clonal.snv <- vector("list", K)
   for (tip in 2:K) {
-    
+
     # Set child node to be the tip (clone) of interest
     child.node <- tip
     # Find parent node corresponding to child node
     parent.node <- tree$edge[which(tree$edge[, 2] == child.node), 1]
-    
+
     # As long as the parent node has value greater than the number of clones
     while (parent.node > K) {
-      
+
       # Find SNVs where parent and child node correspond to start and end node
       snvtemp <- intersect(which(tree$snv[, 2] == parent.node),
                            which(tree$snv[, 3] == child.node))
-      
+
       # If an SNV exists along that branch, store in appropriate list
       if (length(snvtemp) > 0) {
         clonal.snv[[tip]] <- c(clonal.snv[[tip]], snvtemp)
       }
-      
+
       # Set child node equal to parent node
       child.node <- parent.node
       # If child node has reached the top of the tree, then end while loop
       if (child.node == (K + 1))
         break
-      
+
       # Find parent node corresponding to updated child node
       parent.node <- tree$edge[which(tree$edge[, 2] == child.node), 1]
     }
@@ -366,15 +366,15 @@ plot_Z <- function(tree) {
     ": ", round(rowsums_Ps/sum(rowsums_Ps) * 100, digits = 0), "%")
   mut_id_all <- tree$Z %*% (2**seq(ncol(tree$Z), 1))
   mut_id_all <- seq(length(unique(mut_id_all)), 1)[as.factor(mut_id_all)]
-  
+
   count_mut_ids<-0
   branch_ids <- rep(NA,node_total)
-  
+
   # alternate binding of vectors
   trunk_ids<-(node_shown+1):node_total
   stem_ids<-1:node_shown
   alt_inds<-c(trunk_ids, stem_ids)[order(c(seq_along(trunk_ids)*2 - 1, seq_along(stem_ids)*2))]
-  
+
   for (i in alt_inds) {
     mut_num <- sum(tree$snv[, 3] == i)
     if (mut_num == 0) {
@@ -385,19 +385,19 @@ plot_Z <- function(tree) {
       }
     } else{
       count_mut_ids<-count_mut_ids+1
-      branch_ids[i] <- 
+      branch_ids[i] <-
         paste0("M", count_mut_ids, ": ", mut_num, " SNVs")
     }
   }
-  
+
   pt <- ggtree::ggtree(tree)
   pt <- pt + ggplot2::geom_label(ggplot2::aes_string(x = "branch"),
                                  label = branch_ids, color = "firebrick"
   )
-  
+
   pt <- pt + ggtree::geom_tiplab(hjust = 0.39, vjust = 0.85) +
     ggplot2::scale_x_reverse() + ggplot2::coord_flip()
-  
+
   #top, right, bottom, left
   pt+ggplot2::theme(plot.margin = grid::unit(c(0,2,0,0), "cm"))
 }
@@ -408,38 +408,38 @@ plot_Z <- function(tree) {
 
 plot_tree <- function(tree, annovar=NULL, save.muts=F, save.plot=F,
                       outpath=NULL, filename=NULL,...){
-  
+
   snvedge <- rep(NA, nrow(tree$snv))
   for (k in 1:nrow(tree$snv)) {
     snvedge[k] <- intersect(which(tree$edge[, 1] == tree$snv[k, 2]),
                             which(tree$edge[, 2] == tree$snv[k, 3]))
   }
-  
+
   edge.label <- sort(unique(snvedge))
   mut.list=matrix(nrow=length(edge.label),ncol=1)
   if(is.null(annovar)){snv.name=rownames(tree$Z)
   }else{
     snv.name=rownames(Rs)}
-  
+
   # Generate list of mutation clusters
   for (i in 1:length(edge.label)) {
     gene <- snv.name[which(snvedge == edge.label[i])]
     mut.list[i,1]=paste0("M", i, ": ", paste(gene, collapse = ', '))
   }
-  
+
   # Generate plot for Z
   p1 <- plot_Z(tree)
-  
+
   # Generate plot for Ps
   p2 <- ggplotify::as.grob(function(){
     graphics::par(mar = c(1, 1, 0, 5))
     P <- tree$Ps
     graphics::image(1:nrow(P), 1:N, axes = FALSE, ylab = "", xlab = "",
-                    as.matrix(P[,1:N]), breaks = 0:100/100, 
+                    as.matrix(P[,1:N]), breaks = 0:100/100,
                     col = viridis::turbo(100,begin=0.05,end=0.95),useRaster=T)
     graphics::axis(4, at = 1:N, colnames(P)[1:N], cex.axis = 1, las = 1, tick = FALSE,
                    line=-1)
-    graphics::abline(#h = seq(0.5, N + 0.5, 1), 
+    graphics::abline(#h = seq(0.5, N + 0.5, 1),
       v = seq(0.5, nrow(P) + 0.5,
               1), col = "grey")
     if(N<=15){
@@ -451,14 +451,14 @@ plot_tree <- function(tree, annovar=NULL, save.muts=F, save.plot=F,
       }
     }
   })
-  
+
   # Generate plot for Pb
   p3 <- ggplotify::as.grob(function(){
     #bottom, left, top and right margins
     graphics::par(mar = c(1, 1, 1, 5))
     P <- tree$Pb
     graphics::image(x=1:nrow(P), y=1:S, axes = FALSE, ylab = "", xlab = "",
-                    z=as.matrix(P[,1:S]), breaks = 0:100/100, 
+                    z=as.matrix(P[,1:S]), breaks = 0:100/100,
                     col = viridis::turbo(100,begin=0.05,end=0.95))
     graphics::axis(4, at = 1:S, colnames(P)[1:S], cex.axis = 1, las = 1, tick = FALSE,
                    line=-1)
@@ -475,35 +475,35 @@ plot_tree <- function(tree, annovar=NULL, save.muts=F, save.plot=F,
       }
     }
   })
-  
-  
+
+
   ggp<-ggplot2::ggplot(data.frame(x = seq(0.1,1,0.1), y = seq(0.1,1,0.1), z=seq(0.1,1,0.1)),
               ggplot2::aes(x = x, y = y, fill=z)) +
-    ggplot2::geom_tile() + ggplot2::scale_fill_viridis(option="turbo", limits=c(0,1)) +
+    ggplot2::geom_tile() + viridis::scale_fill_viridis(option="turbo", limits=c(0,1)) +
     ggplot2::theme(legend.position = c(0.45,.5),
           legend.direction="horizontal",
           legend.key.height = unit(0.5, 'cm'),
           legend.key.width = unit(1.5, "cm"))+labs(fill = "Prob")
-  
+
   ggp_legend <- cowplot::get_legend(ggp) # Save legend
   grid::grid.newpage()  # Draw empty plot window
   grid::grid.draw(ggp_legend) # Draw legend to window
   p4 <- grid::grid.grab(wrap=T,wrap.grobs=T) # Grab legend
-  
+
   # Put everything together
   lay <- rbind(1,1,1,2,2,2,3,4)
   p <- gridExtra::arrangeGrob(p1,p2,p3,p4,layout_matrix = lay)
   grid::grid.draw(p)
-  
+
   # if TRUE, save text file containing all mutations along the branches
   if (save.muts){
     utils::write.table(mut.list, file = paste0(outpath,"/", project, "_muts.txt"),
                        col.names = FALSE, row.names = FALSE,
                        quote = FALSE, sep = '\t')
   }
-  # if TRUE, save the plot of the best tree 
+  # if TRUE, save the plot of the best tree
   if (save.plot){
-    ggplot2::ggsave(filename=paste0(project,"_plot_tree.jpg"), plot=p, path=outpath, 
+    ggplot2::ggsave(filename=paste0(project,"_plot_tree.jpg"), plot=p, path=outpath,
                     height=7, width=7, units="in", limitsize=F, device="jpg")
   }
   return(mut.list)
@@ -512,8 +512,8 @@ plot_tree <- function(tree, annovar=NULL, save.muts=F, save.plot=F,
 #-------------------------------------------------------------------------------
 # Remove cutoff value for posterior probabilities from Canopy function
 #-------------------------------------------------------------------------------
-canopy_post_v2 <- function(sampchain, projectname, K, numchain, burnin, thin, 
-                           optK, C = NULL, post.config.cutoff = NULL) 
+canopy_post_v2 <- function(sampchain, projectname, K, numchain, burnin, thin,
+                           optK, C = NULL, post.config.cutoff = NULL)
 {
   if (is.null(C)) {
     C <- diag(nrow(sampchain[[1]][[1]][[1]]$cna))
@@ -536,7 +536,7 @@ canopy_post_v2 <- function(sampchain, projectname, K, numchain, burnin, thin,
   for (treei in 1:length(samptreethin)) {
     samptreethin.lik[treei] <- samptreethin[[treei]]$likelihood
   }
-  samptreethin <- samptreethin[which((rank(-1 * samptreethin.lik, 
+  samptreethin <- samptreethin[which((rank(-1 * samptreethin.lik,
                                            ties.method = "first")) <= 5 * (length(samptreethin)/numchain))]
   samptreethin.lik <- rep(NA, length(samptreethin))
   for (treei in 1:length(samptreethin)) {
@@ -557,7 +557,7 @@ canopy_post_v2 <- function(sampchain, projectname, K, numchain, burnin, thin,
     for (categi in 1:categ) {
       list.a <- samptreethin[[i]]$clonalmut
       list.b <- samptreethin[[which(config == categi)[1]]]$clonalmut
-      if ((sum(is.element(list.a, list.b)) == optK) & (sum(is.element(list.b, 
+      if ((sum(is.element(list.a, list.b)) == optK) & (sum(is.element(list.b,
                                                                       list.a)) == optK)) {
         config[i] <- categi
       }
@@ -569,27 +569,27 @@ canopy_post_v2 <- function(sampchain, projectname, K, numchain, burnin, thin,
   }
   z.temp <- (samptreethin.lik - mean(samptreethin.lik))/sd(samptreethin.lik)
   samptreethin <- samptreethin[z.temp <= 1.5 & z.temp >= -1.5]
-  samptreethin.lik <- samptreethin.lik[z.temp <= 1.5 & z.temp >= 
+  samptreethin.lik <- samptreethin.lik[z.temp <= 1.5 & z.temp >=
                                          -1.5]
   config <- config[z.temp <= 1.5 & z.temp >= -1.5]
   config.summary <- matrix(nrow = length(unique(config)), ncol = 3)
-  colnames(config.summary) <- c("Configuration", "Post_prob", 
+  colnames(config.summary) <- c("Configuration", "Post_prob",
                                 "Mean_post_lik")
   config.summary[, 1] <- unique(config)
   for (i in 1:nrow(config.summary)) {
     configi <- config.summary[i, 1]
     configi.temp <- which(config == configi)
-    config.summary[i, 2] <- round(length(configi.temp)/length(config), 
+    config.summary[i, 2] <- round(length(configi.temp)/length(config),
                                   3)
-    config.summary[i, 3] <- round(max(samptreethin.lik[which(config == 
+    config.summary[i, 3] <- round(max(samptreethin.lik[which(config ==
                                                                configi)]), 2)
   }
-  
+
   for (treei in 1:length(samptreethin)) {
     output.tree <- samptreethin[[treei]]
-    output.tree.Z <- output.tree$Z[, 2:ncol(output.tree$Z), 
+    output.tree.Z <- output.tree$Z[, 2:ncol(output.tree$Z),
                                    drop = FALSE]
-    output.tree.P <- apply(output.tree$P[2:nrow(output.tree$P), 
+    output.tree.P <- apply(output.tree$P[2:nrow(output.tree$P),
                                          , drop = FALSE], 2, function(x) {
                                            x/sum(x)
                                          })
