@@ -25,3 +25,22 @@ The distinguishing features of Canopy2 when compared to available methods, inclu
 * `Z`: $M \times K$ clonal tree configuration matrix, a binary matrix which assigns mutations to clones
 * `Ps`: $K \times N$ cell-to-clone assignment matrix, a binary matrix which assigns single-cells to clones
 * `Pb`: $K \times T$ sample-to-clone assignment matrix, which indicates what percentage of each bulk sample consists of each clone
+
+#Installation
+Install the current release from CRAN (not recommended). NOT PUBLISHED ON CRAN YET SO WON'T WORK (5/9/23)
+
+```
+install.packages("canopy2")
+```
+
+Install the devel version from GitHub (HIGHLY recommended, as this will allow you to install any corrected bugs post-publication to CRAN)
+
+```
+install.packages(c("ape", "bayesplot", "biomaRt", "BPSC", "coda", "DirichletReg", "ggh4x", "ggplot2", "ggplotify", "ggpubr", "ggthemes",
+"ggtree", "gridExtra", "gtools", "Rdpack", "SCALE", "viridis"))
+devtools::install_github("annweideman/canopy2/package")
+```
+
+
+
+
