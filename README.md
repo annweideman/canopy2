@@ -26,8 +26,8 @@ The distinguishing features of Canopy2 when compared to available methods, inclu
 * `Ps`: $K \times N$ cell-to-clone assignment matrix, a binary matrix which assigns single-cells to clones
 * `Pb`: $K \times T$ sample-to-clone assignment matrix, which indicates what percentage of each bulk sample consists of each clone
 
-#Installation
-Install the current release from CRAN (not recommended). NOT PUBLISHED ON CRAN YET SO WON'T WORK (5/9/23)
+# Installation
+Install the current release from CRAN (not recommended). Not published on CRAN as of 5/9/23.
 
 ```
 install.packages("canopy2")
