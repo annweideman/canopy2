@@ -1,0 +1,315 @@
+---
+title: "Canopy2"
+author: "Ann Marie Weideman"
+output: 
+  BiocStyle::html_document
+vignette: >
+  %\VignetteIndexEntry{Canopy 2}
+  %\VignetteEngine{knitr::rmarkdown}
+  c%\VignetteEncoding{UTF-8}  
+---
+
+```{r echo=FALSE, include = TRUE}
+knitr::opts_chunk$set(
+  cache=T, # if TRUE knitr will cache the results to reuse in future knits
+  dpi=1000, #resolution of figures
+  fig.align = 'left', # how to align graphics in the final doc. 
+  collapse = TRUE, # collapse the text output into the source blocks
+  comment = "#>" # command to use for commenting 
+  )
+```
+
+This is a demo for the Canopy2 package in `R`. Canopy2 is a statistical and computational method for tumor phylogeny inference using single-nucleotide variants derived from bulk DNA and single-cell RNA sequencing. Canopy2 samples from a joint probability distribution involving a mixture of binomial and beta-binomials, specifically chosen to account for the sparsity and stochasticity of the single-cell data. Compared to existing methods, Canopy2 uses both bulk and single-cell data (versus one or the other) to update the joint posterior. Additionally, Canopy2 demystifies the sources of zeros in the single-cell data and separates non-cancerous (cells without mutations), stochastic (mutations not expressed due to bursting), and technical (expressed mutations not picked up by sequencing) zeros. Canopy2's performance was assessed by simulations, and the methodology was applied to bulk and single-cell breast cancer and glioblastoma datasets, with single-cell DNA sequencing data for validation. We show that Canopy2 successfully infers tumor phylogenetic history and conducts mutational profiling of tumor subpopulations.
+
+# Canopy2 setup
+
+```{r setup}
+devtools::load_all() 
+outdir<-paste("C:/Users/anndo/Dropbox/Dissertation/manuscripts/paper1/package/Canopy2/vignettes/output")
+proj<-"vignette"
+```
+
+# Simulation
+
+The simulation parameters and MCMC arugments are specified for the simulation based on user preference. Here we choose a small number of cells (`N=15`) and mutations (`M=7`) to ensure a speedy run time for the vignette. We assumed that these cells were collected from five bulk samples (`S=5`) and that the true number of subclones is four (`ktrue=4`). The gene activation rate, $\alpha_m$, and gene deactivation rate, $\beta_m$, are chosen to be close those observed in vitro, i.e., $\alpha_m << \beta_m$. The sequencing depths for WES were chosen to range from 500x (`b.mindepth=500`) to 1000x (`b.mindepth=1000`), as 500x is the minimum coverage recommended by Thermo Fisher to detect somatic mutations using next-generation sequencing. Sequencing depths for single-cell data were chosen to range from a coverage of 80x (`sc.mindepth=80`) to 120x (`sc.maxdepth=120`).
+
+```{r}
+# Set parameter values for simulation from beta-binomial
+N=10; S=3; M=5; Ktrue=3
+#N=15; S=5; M=7; Ktrue=4 #number of single cells, bulk samples, mutations, clones
+alpha=1; beta=1#gene activation and deactivation rates
+kappa=1; tau=999 #parameters for sequencing error
+b.mindepth=500; b.maxdepth=1000 #bulk min and max sequencing depth
+sc.mindepth=80; sc.maxdepth=120 #single-cell min and max sequencing depth
+scale=300 #scaling factor for beta distribution: rate at which DNA transcribed into RNA
+```
+
+The MCMC is run for 1,000 iterations (`niter=1000`) across 5 chains (`chains=5`). To ensure that the values of the joint posterior are not highly correlated and are evaluated after convergence has occurred, only every 10th value is stored (thin=10) and 20% burn-in (`pburn=0.2`) is removed. A range of possible subclones between 3 and 5 (`subclones=3:5`) are evaluated, although we know the truth is 4 subclones (`ktrue=4`).
+
+```{r}
+# Specify arguments for MCMC
+nchains<-5 #number of chains
+pburn<-0.2 #percent burn-in to remove
+thin<-10 #save every 10th iteration (discard 1-9)
+niter<-1000 #number of iterations of MCMC
+project="Simulation" #name of project
+criterion="BIC" # information criterion (AIC, BIC, or DIC) to select best tree
+Ktrue=3 #true number of subclones 
+Klist=3 #range of subclones to try
+seed=1 #seed to start random number generation
+```
+
+To simulate data from a beta-binomial distribution, the mutation-specific gene activation rates, $\alpha_m$, and gene deactivation rates, $\beta_m$, will first need to be estimated from simulated gene expression data using the `param.est` function. The gene expression data is simulated from a beta-Poisson distribution in the `simulate_data()` function; the methodology behind this is discussed further in the text. 
+
+```{r}
+# Simulate data from a beta-binomial distn
+sims.out<-simulate_data(N, S, M, alpha, beta, kappa, tau, Ktrue,
+                        b.mindepth, b.maxdepth, sc.mindepth, sc.maxdepth, 
+                        scale,seed)
+param.out<-get_burstiness_bpsc(featurecounts=sims.out$G, N)
+#gene activation rate
+param.out$alpha
+#gene deactivation rate
+param.out$beta
+
+```
+While not relevant for this simulation, in the real data there will generally be some mutations for which bursting kinetics cannot be estimated due to an abundance of zero read counts. Thus, after $\alpha_m$ and $\beta_m$ are estimated, the alternative and total read counts for both the bulk and single cell data must be subsetted to include only those mutations with estimable $\alpha_m$ and $\beta_m$. For demonstration, we will include this chunk of code, although the number of rows in the matrices ($R^S$, $R^B$, $X^S$, $X^B$) will remain unchanged.
+
+```{r}
+# Subset alternative and total read counts to include only mutations for which
+# gene burstiness can be estimated 
+param.out$id.g
+# M=7 mutations with estimable gene burstiness
+Rs<-sims.out$Rs[param.out$id.g,] #subset single cell alternative read counts
+Xs<-sims.out$Xs[param.out$id.g,] #subset single cell total read counts
+Rb<-sims.out$Rb[param.out$id.g,] #subset bulk alternative read counts
+Xb<-sims.out$Xb[param.out$id.g,] #subset bulk total read counts
+```
+
+The estimates for $\alpha_m$ and $\beta_m$ are passed to the `get_trees()` function which produces trees, posteriors, and Metropolis-Hastings acceptance rate associate with $K$ subclones. The output from `get_trees()` will consist of a list of lists of length `n.chains * K` where each list corresponds to a specific chain and subclone.
+
+```{r}
+# Produce trees, posteriors and Metropolis-Hastings acceptance rate associated 
+# with K subclones
+get.trees.out<-get_trees(Rs, Rb, Xs, Xb, alpha=param.out$alpha,
+                         beta=param.out$beta, kappa, tau, Klist,
+                         niter, nchains, thin, pburn, seed)
+
+# For K=3 and the first chain
+get.trees.out$samples[[1]]$K
+get.trees.out$samples[[1]]$tree[[1]] #print only first tree from first iteration
+tail(get.trees.out$samples[[1]]$posteriors)
+get.trees.out$samples[[1]]$`acceptance rate`
+```
+
+The trees and posteriors obtained from `get_trees()` can be used to produce diagnostic plots to investigate the lag autocorrelation factor (lag ACF), posterior densities, and trace plots. Recall, we want the lag ACF, or the correlation between adjacent posterior values, to be low. Additionally, the posterior densities should align in space, and the trace plots appear as random noise.
+
+```{r warning=F, message=F}
+# Produce diagnostic plots for the lag autocorrelation factor, posterior 
+# densities, and trace
+get_diagnostics(get.trees.out=get.trees.out)
+```
+
+Finally, the `get_best_tree_sims()` function is used to produce the best tree and corresponding optimal number of $K$ subclones, posteriors, and Metropolis-Hastings acceptance rate. The true tree and simulated trees, generated for each subclone and chain, are passed as inputs with a user-specified information criterion (AIC, BIC, or DIC).
+
+```{r, warning=F}
+# Output the best phylogenetic tree based on user-supplied information criterion
+sim.best.tree<-get_best_tree_sims(truetree=sims.out$true.tree, 
+                                  get.trees.out=get.trees.out, Ktrue=Ktrue,
+                                  criterion=criterion,
+                                  save.muts=T,save.plot=T,project=proj, 
+                                  outpath=outdir)
+```
+
+The optimal number of subclones, $K=4$, was chosen by the algorithm and coincides with the true number of subclones. The SNAs in the true and inferred trees perfectly align for the chosen parameterization.
+
+<!-- # Real data -->
+
+<!-- We will apply Canopy2 to two real datasets, a glioblastoma (GBM) dataset ([Lee et al., 2017](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5627771/)) and a breast cancer (BC) dataset ([Chung et al., 2017](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5424158/)). We refer readers to the manuscript Supplemental Materials for a thorough summary of these data. In brief, the GBM dataset contains blood, primary tumor, and recurrent tumor from three patients, GBM2 (largest), GBM9, and GMB10 (smallest). The BC dataset contains blood, primary tumor, and metastatic lymph node biopsies from two patients, BC03 (smaller) and BC07 (larger). -->
+
+<!-- Much of the code used in the [Simulations](Simulations) section is pertinent here. We do not need to set the parameter values for the MCMC unless we want to update them, as this was done earlier. So, we can jump right into the function calls. -->
+
+<!-- Recall, the order of the steps is as follows: -->
+
+<!-- 1.  Estimate gene activation and gene deacivation rates (bursting kinetics). -->
+<!-- 2.  Subset read counts to include only SNVs for which gene burstiness can be estimated. -->
+<!-- 3.  Use MCMC to sample in the tree space to produce a list of trees (posterior estimates). -->
+<!-- 4.  Produce diagnostic plots to investigate posterior estimates. -->
+<!-- 5.  Find the optimal tree using a user-selected information criterion. -->
+
+<!-- # Glioblastoma dataset -->
+
+<!-- In this section, will work specifically with the data from patient GBM10. First, we import the read count and expression data, pre-processed using the SNV pipeline developed by our lab (see manuscript Supplemental Materials). -->
+
+<!-- To pre-process the gene expression data, we map Ensembl IDs to gene symbols, remove any duplicates for Ensembl ID, and then subset gene expression data to only those genes present in ANNOVAR output. -->
+
+<!-- ```{r} -->
+<!-- #load GBM10 read counts -->
+<!-- load(paste0(data_dir,"glioblastoma_lee/GBM10_point_mutation_somatic.rda")) -->
+<!-- #load GBM10 gene expression data -->
+<!-- load(paste0(data_dir,"glioblastoma_lee/GBM10_gene_expression_levels.rda")) -->
+
+<!-- # variant annotations -->
+<!-- gbm10.annovar<-annovar -->
+
+<!-- # single-cell alternative read counts -->
+<!-- gbm10.Rs<-alt.qc[,grepl( "SC" , colnames( alt.qc ) )] -->
+<!-- rownames(gbm10.Rs)<-gbm10.annovar$Gene.refGene -->
+<!-- # single-cell total read counts -->
+<!-- gbm10.Xs<-alt.qc[,grepl( "SC" , colnames( alt.qc ) )]+ -->
+<!--           ref.qc[,grepl( "SC" , colnames( alt.qc ) )] -->
+<!-- rownames(gbm10.Xs)<-gbm10.annovar$Gene.refGene -->
+<!-- # bulk alternative read counts -->
+<!-- gbm10.Rb<-alt.qc[,grepl( "DNA" , colnames( alt.qc ) )] -->
+<!-- rownames(gbm10.Rb)<-gbm10.annovar$Gene.refGene -->
+<!-- # bulk total read counts -->
+<!-- gbm10.Xb<-alt.qc[,grepl( "DNA" , colnames( alt.qc ) )]+ -->
+<!--           ref.qc[,grepl( "DNA" , colnames( alt.qc ) )] -->
+<!-- rownames(gbm10.Xb)<-gbm10.annovar$Gene.refGene -->
+
+<!-- N<-ncol(gbm10.Rs) #number of single cells -->
+<!-- M<-nrow(gbm10.Rs) #number of mutations -->
+<!-- S<-ncol(gbm10.Rb) #number of bulk samples -->
+<!-- niter<-500 #number of iterations of MCMC -->
+
+<!-- #pre-process gene expression data -->
+<!-- gbm10.featurecounts.qc<-get_gene_expression(featurecounts=featurecounts.qc, -->
+<!--                                             annovar=annovar, -->
+<!--                                             build=37) -->
+<!-- ``` -->
+
+<!-- The parameters for bursting kinetics are then estimated using the [BPSC](https://academic.oup.com/bioinformatics/article/32/14/2128/2288270) methodology. For some genes, due to the sparsity of the expression data, [BPSC](https://academic.oup.com/bioinformatics/article/32/14/2128/2288270) may return negative estimates. In these situations, since negative parameter estimates are not allowed for the beta-binomial distribution, we must drop these genes from the read counts before continuing. -->
+
+<!-- ```{r} -->
+<!-- #get parameter estimates for bursting kinetics -->
+<!-- param.gbm10<-get_burstiness_scale(featurecounts=gbm10.featurecounts.qc,N) -->
+<!-- #gene activation rate -->
+<!-- param.gbm10$alpha -->
+<!-- summary(param.gbm10$alpha) -->
+<!-- #gene deactivation rate -->
+<!-- param.gbm10$beta -->
+<!-- summary(param.gbm10$beta) -->
+
+<!-- #retain only those read counts that correspond to estimated parameters -->
+<!-- gbm10.Rs<-gbm10.Rs[param.gbm10$id.g,] #subset single cell alternative read counts -->
+<!-- gbm10.Xs<-gbm10.Xs[param.gbm10$id.g,] #subset single cell total read counts -->
+<!-- gbm10.Rb<-gbm10.Rb[param.gbm10$id.g,] #subset bulk alternative counts -->
+<!-- gbm10.Xb<-gbm10.Xb[param.gbm10$id.g,] #subset bulk total read counts -->
+<!-- ``` -->
+
+<!-- Finally, now that we have estimates for $\alpha$ and $\beta$, we can produce the posterior trees, diagnostic plots, and best tree based on a user-selected information criterion (here BIC is chosen). -->
+
+<!-- ```{r} -->
+<!-- # Produce trees, posteriors and Metropolis-Hastings acceptance rate associated -->
+<!-- # with K subclones -->
+<!-- gbm10.trees<-get_trees(Rs=gbm10.Rs, Rb=gbm10.Rb, Xs=gbm10.Xs, Xb=gbm10.Xb, -->
+<!--                        alpha=param.gbm10$alpha, beta=param.gbm10$beta, -->
+<!--                        kappa, tau, Klist, niter, -->
+<!--                        nchains, thin, pburn, seed, code_dir) -->
+
+<!-- # Produce diagnostic plots for the lag autocorrelation factor, posterior -->
+<!-- # densities, and trace -->
+<!-- get_diagnostics(samples=gbm10.trees, nchains=nchains, Klist=Klist,pburn=pburn,     -->
+<!--                  project="GBM10",outpath=outpath) -->
+<!-- ``` -->
+
+<!-- ```{r, fig.width=6, fig.asp=1.5, out.width='70%'} -->
+<!-- # Produce the optimal number of K subclones, tree, posteriors, and -->
+<!-- # Metropolis-Hastings acceptance rate selected by using a user-supplied -->
+<!-- # information criterion -->
+<!-- gbm10.best.tree<-get_best_tree(samples=gbm10.trees, annovar=gbm10.annovar, Rs=gbm10.Rs, -->
+<!--                              Rb=gbm10.Rb, Klist=Klist, nchains=nchains, -->
+<!--                              criterion=criterion, plottree=T,outpath=outpath) -->
+<!-- gbm10.best.tree -->
+<!-- ``` -->
+
+<!-- # Breast Cancer dataset -->
+
+<!-- We will work specifically with the data from patient BC03. First, we import the read count and expression data, pre-processed using the SNV pipeline developed by our lab (see manuscript Supplemental Materials). Note that for the read count data, the last two columns, SRR3023078 and SRR3023080, correspond to the bulk samples. -->
+
+<!-- Again, to pre-process the gene expression data, we map Ensembl IDs to gene symbols, remove any duplicates for Ensembl ID, and then subset gene expression data to only those genes present in ANNOVAR output. -->
+
+<!-- ```{r} -->
+<!-- #load BC03 read counts -->
+<!-- load(paste0(data_dir,"breast_cancer_chung/BC03_point_mutation_somatic.rda")) -->
+<!-- #load BC03 gene expression data -->
+<!-- load(paste0(data_dir,"breast_cancer_chung/BC03_gene_expression_levels.rda")) -->
+
+<!-- # single-cell alternative read counts -->
+<!-- bc03.Rs<-alt.qc[,!(colnames(alt.qc)%in%c("SRR2973275","SRR2973276", -->
+<!--                                          "SRR3023078","SRR3023080"))] -->
+<!-- # single-cell total read counts -->
+<!-- bc03.Xs<-alt.qc[,!(colnames(alt.qc)%in%c("SRR2973275","SRR2973276", -->
+<!--                                          "SRR3023078","SRR3023080"))]+ -->
+<!--          ref.qc[,!(colnames(alt.qc)%in%c("SRR2973275","SRR2973276", -->
+<!--                                          "SRR3023078","SRR3023080"))] -->
+
+<!-- # bulk alternative read counts -->
+<!-- bc03.Rb<-alt.qc[,c("SRR3023078","SRR3023080")] -->
+<!-- # bulk total read counts -->
+<!-- bc03.Xb<-alt.qc[,c("SRR3023078","SRR3023080")]+ -->
+<!--          ref.qc[,c("SRR3023078","SRR3023080")] -->
+<!-- # variant annotations -->
+<!-- bc03.annovar<-annovar -->
+
+<!-- N<-ncol(bc03.Rs) #number of single-cells -->
+<!-- M<-nrow(bc03.Rs) #number of mutations -->
+<!-- S<-ncol(bc03.Rb) #number of bulk samples -->
+
+<!-- #pre-process gene expression data -->
+<!-- bc03.featurecounts.qc<-get_gene_expression(featurecounts=featurecounts.qc, -->
+<!--                                             annovar=annovar, -->
+<!--                                             build=37) -->
+<!-- ``` -->
+
+<!-- As was done for the glioblastoma data, the parameters for the gene activation and deactivation rates (bursting kinetics) are estimated using the [BPSC](https://academic.oup.com/bioinformatics/article/32/14/2128/2288270) methodology. We expect that [BPSC](https://academic.oup.com/bioinformatics/article/32/14/2128/2288270) will return negative estimates for some genes due to the sparsity of the expression data, and we will drop these genes from the read counts before continuing. -->
+
+<!-- ```{r} -->
+<!-- #get parameter estimates for bursting kinetics -->
+<!-- param.bc03<-get_burstiness_bpsc(featurecounts=bc03.featurecounts.qc,N) -->
+<!-- #gene activation rate -->
+<!-- param.bc03$alpha -->
+<!-- summary(param.bc03$alpha) -->
+<!-- #gene deactivation rate -->
+<!-- param.bc03$beta -->
+<!-- summary(param.bc03$beta) -->
+
+<!-- #retain only those read counts that correspond to estimated parameters -->
+<!-- bc03.Rs<-bc03.Rs[param.bc03$id.g,] #subset single cell alternative read counts -->
+<!-- bc03.Xs<-bc03.Xs[param.bc03$id.g,] #subset single cell total read counts -->
+<!-- bc03.Rb<-bc03.Rb[param.bc03$id.g,] #subset bulk alternative read counts -->
+<!-- bc03.Xb<-bc03.Xb[param.bc03$id.g,] #subset bulk total read counts -->
+<!-- ``` -->
+
+<!-- Finally, we use these estimates to produce the posterior trees, diagnostic plots, and best tree based on a user-selected information criterion (here AIC is chosen). -->
+
+<!-- ```{r} -->
+<!-- # Produce trees, posteriors and Metropolis-Hastings acceptance rate associated -->
+<!-- # with K subclones -->
+<!-- bc03.trees<-get_trees(bc03.Rs, bc03.Rb, bc03.Xs, bc03.Xb, -->
+<!--                        alpha=param.bc03$alpha, beta=param.bc03$beta, -->
+<!--                        kappa, tau, Klist, niter, -->
+<!--                        nchains, thin, pburn, seed, code_dir) -->
+
+<!-- # Produce diagnostic plots for the lag autocorrelation factor, posterior -->
+<!-- # densities, and trace -->
+<!-- get_diagnostics(samples=bc03.trees, nchains, Klist, pburn, project) -->
+<!-- ``` -->
+
+<!-- ```{r, fig.width=6, fig.asp=1.5, out.width='70%'} -->
+<!-- # Produce the optimal number of K subclones, tree, posteriors, and -->
+<!-- # Metropolis-Hastings acceptance rate selected by using a user-supplied -->
+<!-- # information criterion -->
+<!-- bc03.best.tree<-get_best_tree(samples=bc03.trees, annovar=bc03.annovar, Rs=bc03.Rs, -->
+<!--                              Rb=bc03.Rb, Klist=Klist, nchains=nchains, -->
+<!--                              criterion="AIC", plottree=T, outpath=) -->
+<!-- bc03.best.tree -->
+<!-- ``` -->
+
+<!-- # Session info -->
+
+<!-- Here is the output of sessionInfo() on the system on which this document was compiled. -->
+
+<!-- ```{r} -->
+<!-- sessionInfo() -->
+<!-- ``` -->

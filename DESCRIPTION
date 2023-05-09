@@ -1,0 +1,51 @@
+Package: Canopy2
+Type: Package
+Title: Canopy2: Tumor Phylogeny Inference Using Bulk DNA and Single-Cell RNA Sequencing
+Version: 0.0.1
+Authors@R: 
+    person(given = "Ann Marie",
+           family = "Weideman",
+           role = c("aut", "cre"),
+           email = "anndo1@umbc.edu",
+           comment = c(ORCID = "0000-0002-1653-9102"))
+Description: Canopy2 is a statistical and computational method for tumor phylogeny inference using
+    single-nucleotide variants derived from bulk DNA and single-cell RNA sequencing. Canopy2 samples 
+    from a joint probability distribution involving a mixture of binomial and beta-binomials, 
+    specifically chosen to account for the sparsity and stochasticity of the single-cell data. The 
+    input involves variant allele frequencies (VAFs) of somatic single nucleotide variants (SNVs) 
+    present in the bulk whole-exome sequencing and single-cell RNA sequencing. Canopy outputs 
+    concvergence diagnostics for each evolutionary configuration and uses a user-specified 
+    information criterion (AIC, BIC, or DIC) to select the optimal evolutionary configuration. 
+License: MIT + file LICENSE
+Encoding: UTF-8
+Imports: 
+    ape,
+    bayesplot,
+    biomaRt,
+    BPSC,
+    coda,
+    DirichletReg,
+    ggh4x,
+    ggplot2,
+    ggplotify,
+    ggpubr,
+    ggthemes,
+    ggtree,
+    gridExtra,
+    gtools,
+    Rdpack,
+    SCALE (>= 1.3.0),
+    viridis
+RdMacros: Rdpack
+Remotes: 
+    yuchaojiang/SCALE
+RoxygenNote: 7.2.3
+Suggests: 
+    devtools,
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0)
+VignetteBuilder: knitr
+Config/testthat/edition: 3
+Depends: 
+    R (>= 2.10)
