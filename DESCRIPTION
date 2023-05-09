@@ -10,12 +10,12 @@ Authors@R:
            comment = c(ORCID = "0000-0002-1653-9102"))
 Description: Canopy2 is a statistical and computational method for tumor phylogeny inference using
     single-nucleotide variants derived from bulk DNA and single-cell RNA sequencing. Canopy2 samples 
-    from a joint probability distribution involving a mixture of binomial and beta-binomials, 
+    from a joint probability distribution involving a mixture of a binomial and beta-binomials, 
     specifically chosen to account for the sparsity and stochasticity of the single-cell data. The 
     input involves variant allele frequencies (VAFs) of somatic single nucleotide variants (SNVs) 
-    present in the bulk whole-exome sequencing and single-cell RNA sequencing. Canopy outputs 
-    concvergence diagnostics for each evolutionary configuration and uses a user-specified 
-    information criterion (AIC, BIC, or DIC) to select the optimal evolutionary configuration. 
+    present in the bulk DNA whole-exome sequencing and single-cell RNA sequencing data. Canopy2 outputs 
+    convergence diagnostics for each evolutionary configuration and uses the deviance information 
+    criterion (DIC) to select the optimal evolutionary configuration. 
 License: MIT + file LICENSE
 Encoding: UTF-8
 Imports: 
