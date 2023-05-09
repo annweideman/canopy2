@@ -2,23 +2,23 @@
 #'
 #' Produce a list of phylogenetic trees in a sample space of size
 #' number of chains x number of subclones. Sampling is performed using
-#' Metropolis-within-Gibbs. Output is coded as class \code{get_trees}.
+#' Metropolis-within-Gibbs. Output is of class \code{get_trees}.
 #'
-#' @param Rs mutation x cell matrix of integers. Denotes the number 
-#' of alternative allele reads corresponding to variant m in cell n. 
+#' @param Rs mutation x cell matrix of integers. Denotes the number
+#' of alternative allele reads corresponding to variant m in cell n.
 #' Rownames must match those of argument \code{Rb}
-#' @param Rb mutation x bulk sample matrix of integers. Denotes the number 
-#' of alternative allele reads corresponding to variant m in bulk sample s. 
+#' @param Rb mutation x bulk sample matrix of integers. Denotes the number
+#' of alternative allele reads corresponding to variant m in bulk sample s.
 #' Rownames must match those of argument \code{Rs}
-#' @param Xs mutation x cell matrix of integers. Denotes the number 
-#' of total reads corresponding to variant m in cell n. 
+#' @param Xs mutation x cell matrix of integers. Denotes the number
+#' of total reads corresponding to variant m in cell n.
 #' Rownames must match those of argument \code{Xb}
-#' @param Xb mutation x bulk sample matrix of integers. Denotes the number 
-#' of total reads corresponding to variant m in bulk sample s. 
+#' @param Xb mutation x bulk sample matrix of integers. Denotes the number
+#' of total reads corresponding to variant m in bulk sample s.
 #' Rownames must match those of argument \code{Xs}
 #' @param alpha numeric vector of values greater than 0 with length \eqn{M}
 #' (number of mutations) representing the gene activation rate. These can be
-#' estimated using the 
+#' estimated using the
 #' @param beta numeric vector of values greater than 0 with length \eqn{M}
 #' (number of mutations) representing the gene deactivation rate
 #' @param kappa a positive value used in the computation of the
@@ -32,7 +32,7 @@
 #'  For example, if \code{thin=10} then every 10th iteration is stored. Defaults
 #'  to 10.
 #' @param pburn a decimal denoting the percentage of burn-in to store. Defaults
-#' to 0.10 (10%). 
+#' to 0.10 (10%).
 #' @param seed a state (positive integer) to set the random number generation.
 #' Defaults to 1.
 #'
@@ -139,7 +139,7 @@ get_trees<-function(Rs, Rb, Xs, Xb, alpha, beta, kappa, tau,
   if (seed <= 0 | !is.numeric(seed) | seed!=round(seed)){
     stop("seed must be a positive integer")
   }
-  
+
   # Number of iterations after thinning
   niter.thin<-niter/thin
 
@@ -148,9 +148,9 @@ get_trees<-function(Rs, Rb, Xs, Xb, alpha, beta, kappa, tau,
 
   # Number of iterations after burn-in
   niter.post.burn<-niter.thin-burn.len
-  
+
   if(niter.post.burn<10){
-    stop("There are less than 10 iterations remaining after thinning and removing the 
+    stop("There are less than 10 iterations remaining after thinning and removing the
          burn-in period. Please adjust your parameters accordingly.")
   }
 
@@ -176,7 +176,7 @@ get_trees<-function(Rs, Rb, Xs, Xb, alpha, beta, kappa, tau,
     # Initialization
     #-----------------------------------------------
     initialize<-function(seedling){
-      
+
       set.seed(seedling)
 
       # Generate a tree
@@ -198,7 +198,7 @@ get_trees<-function(Rs, Rb, Xs, Xb, alpha, beta, kappa, tau,
       rownames(Pb)=paste0('clone',1:K)
       colnames(Pb)=colnames(Rb)
       apply(Pb,2,sum)
-      
+
       # Single cells
       Ps=stats::rmultinom(N, 1, prob = rep(1/K, K))
       rownames(Ps)=paste0('clone',1:K)
@@ -252,7 +252,7 @@ get_trees<-function(Rs, Rb, Xs, Xb, alpha, beta, kappa, tau,
           tree.new=tree
           tree.new$Ps=Ps.new
           tree.new$Post=getPost(tree.new, Rb, Xb, Rs, Xs, alpha, beta, kappa, tau)
-          
+
           r=exp(tree.new$Post-tree$Post)
           if(r>= stats::runif(1)){
             tree=tree.new
@@ -264,7 +264,7 @@ get_trees<-function(Rs, Rb, Xs, Xb, alpha, beta, kappa, tau,
         }
       return(list(tree,accept))
     }
-    
+
     sampPb=function(tree,...){
       S=ncol(tree$Pb) # number of bulk samples
       K=nrow(tree$Pb) # number of clones
@@ -307,7 +307,7 @@ get_trees<-function(Rs, Rb, Xs, Xb, alpha, beta, kappa, tau,
       for(iter in 1:niter){
 
         tosample=sample.int(1, n=3)
-        
+
         if(tosample==1){
           sampZout=sampZ(tree)
           tree=sampZout[[1]]
@@ -336,12 +336,12 @@ get_trees<-function(Rs, Rb, Xs, Xb, alpha, beta, kappa, tau,
       post<-post[-c(1:burn.len)]
       accept<-accept[-c(1:burn.len)]
       accept.rate<-sum(accept)/length(accept)
-      
+
       # Sort Ps to aggregate 1's for better visualization
       temp.mat<-matrix(NA,nrow=nrow(tree$Ps),ncol=1)
       rownames(temp.mat)<-rownames(tree$Ps)
       id.ones<-lapply(1:nrow(tree$Ps),function(x) which(tree$Ps[x,]==1))
-      
+
       # Generate mini binary matrices that are concatenated to create final matrix
       for(list.id in 1:length(id.ones)){
         temp.mat0<-matrix(0,nrow=nrow(tree$Ps),ncol=length(id.ones[[list.id]]))
@@ -349,16 +349,16 @@ get_trees<-function(Rs, Rb, Xs, Xb, alpha, beta, kappa, tau,
         colnames(temp.mat0)<-names(id.ones[[list.id]])
         temp.mat<-cbind(temp.mat,temp.mat0)
       }
-      
+
       # Remove vector of NAs
       temp.mat<-temp.mat[,-1]
-      
+
       return(list("K"=K,"tree"=tree.list,"posteriors"=post,"acceptance rate"=accept.rate))
       }
       )
 
      samples.out<-c(samples.out,out.mcmc)
-    
+
   }
 
   final.out<-list(samples=samples.out,
