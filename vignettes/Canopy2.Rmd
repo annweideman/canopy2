@@ -19,7 +19,9 @@ knitr::opts_chunk$set(
   )
 ```
 
-This is a demo for the Canopy2 package in `R`. Canopy2 is a statistical and computational method for tumor phylogeny inference using single-nucleotide variants derived from bulk DNA and single-cell RNA sequencing. Canopy2 samples from a joint probability distribution involving a mixture of binomial and beta-binomials, specifically chosen to account for the sparsity and stochasticity of the single-cell data. Compared to existing methods, Canopy2 uses both bulk and single-cell data (versus one or the other) to update the joint posterior. Additionally, Canopy2 demystifies the sources of zeros in the single-cell data and separates non-cancerous (cells without mutations), stochastic (mutations not expressed due to bursting), and technical (expressed mutations not picked up by sequencing) zeros. Canopy2's performance was assessed by simulations, and the methodology was applied to bulk and single-cell breast cancer and glioblastoma datasets, with single-cell DNA sequencing data for validation. We show that Canopy2 successfully infers tumor phylogenetic history and conducts mutational profiling of tumor subpopulations.
+This is a demo for the Canopy2 package in `R`. Canopy2 is an R package that uses Bayesian and computational methods to infer the tumor phylogenetic tree from bulk DNA whole exome sequencing (WES) and single-cell RNA sequencing (scRNA-seq).
+
+The distinguishing features of Canopy2 when compared to available methods, including predecessor Canopy, are: 1) joint inference using single nucleotide variants derived from bulk DNA WES and scRNA-seq, 2) separation of zeros categorized as non-cancerous (cells without mutations), stochastic (mutations not expressed due to bursting), and technical (expressed mutations not picked up by sequencing), and 3) a three-tier output used to comprehensively examine the tumor evolutionary history and intratumor heterogeneity. The output allows one to infer the cell-of-origin (cancer initiating cell), temporal order of the point mutations, the mutational profiles of the single-cells, and the composition of the bulk samples that comprise these single-cells.
 
 # Canopy2 setup
 
@@ -123,111 +125,25 @@ sim.best.tree<-get_best_tree_sims(truetree=sims.out$true.tree,
 
 The optimal number of subclones, $K=4$, was chosen by the algorithm and coincides with the true number of subclones. The SNAs in the true and inferred trees perfectly align for the chosen parameterization.
 
-<!-- # Real data -->
+# Real data 
 
-<!-- We will apply Canopy2 to two real datasets, a glioblastoma (GBM) dataset ([Lee et al., 2017](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5627771/)) and a breast cancer (BC) dataset ([Chung et al., 2017](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5424158/)). We refer readers to the manuscript Supplemental Materials for a thorough summary of these data. In brief, the GBM dataset contains blood, primary tumor, and recurrent tumor from three patients, GBM2 (largest), GBM9, and GMB10 (smallest). The BC dataset contains blood, primary tumor, and metastatic lymph node biopsies from two patients, BC03 (smaller) and BC07 (larger). -->
+We will apply Canopy2 to a breast cancer (BC) dataset from Chung et al. ([Chung et al., 2017](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5424158/)). We refer readers to the manuscript Supplement for a thorough summary of these data. In brief, the BC07 dataset contains blood, primary tumor, and metastatic lymph node biopsies from patient BC07.
 
-<!-- Much of the code used in the [Simulations](Simulations) section is pertinent here. We do not need to set the parameter values for the MCMC unless we want to update them, as this was done earlier. So, we can jump right into the function calls. -->
+Much of the code used in the [Simulations](Simulations) section is pertinent here. We do not need to set the parameter values for the MCMC unless we want to update them, as this was done earlier. So, we can jump right into the function calls. 
 
-<!-- Recall, the order of the steps is as follows: -->
+Recall, the order of the steps is as follows: 
 
-<!-- 1.  Estimate gene activation and gene deacivation rates (bursting kinetics). -->
-<!-- 2.  Subset read counts to include only SNVs for which gene burstiness can be estimated. -->
-<!-- 3.  Use MCMC to sample in the tree space to produce a list of trees (posterior estimates). -->
-<!-- 4.  Produce diagnostic plots to investigate posterior estimates. -->
-<!-- 5.  Find the optimal tree using a user-selected information criterion. -->
+1.  Estimate gene activation and gene deacivation rates (bursting kinetics). 
+2.  Subset read counts to include only SNVs for which gene burstiness can be estimated. 
+3.  Use MCMC to sample in the tree space to produce a list of trees (posterior estimates). -->
+4.  Produce diagnostic plots to investigate posterior estimates. 
+5.  Find the optimal tree using the deviance information criterion, DIC. 
 
-<!-- # Glioblastoma dataset -->
+# Breast Cancer dataset -->
 
-<!-- In this section, will work specifically with the data from patient GBM10. First, we import the read count and expression data, pre-processed using the SNV pipeline developed by our lab (see manuscript Supplemental Materials). -->
+We will work specifically with the data from patient BC03. First, we import the read count and expression data, pre-processed using the SNV pipeline developed by our lab (see manuscript Supplement). Note that for the read count data, the last two columns, SRR3023078 and SRR3023080, correspond to the bulk samples. -->
 
-<!-- To pre-process the gene expression data, we map Ensembl IDs to gene symbols, remove any duplicates for Ensembl ID, and then subset gene expression data to only those genes present in ANNOVAR output. -->
-
-<!-- ```{r} -->
-<!-- #load GBM10 read counts -->
-<!-- load(paste0(data_dir,"glioblastoma_lee/GBM10_point_mutation_somatic.rda")) -->
-<!-- #load GBM10 gene expression data -->
-<!-- load(paste0(data_dir,"glioblastoma_lee/GBM10_gene_expression_levels.rda")) -->
-
-<!-- # variant annotations -->
-<!-- gbm10.annovar<-annovar -->
-
-<!-- # single-cell alternative read counts -->
-<!-- gbm10.Rs<-alt.qc[,grepl( "SC" , colnames( alt.qc ) )] -->
-<!-- rownames(gbm10.Rs)<-gbm10.annovar$Gene.refGene -->
-<!-- # single-cell total read counts -->
-<!-- gbm10.Xs<-alt.qc[,grepl( "SC" , colnames( alt.qc ) )]+ -->
-<!--           ref.qc[,grepl( "SC" , colnames( alt.qc ) )] -->
-<!-- rownames(gbm10.Xs)<-gbm10.annovar$Gene.refGene -->
-<!-- # bulk alternative read counts -->
-<!-- gbm10.Rb<-alt.qc[,grepl( "DNA" , colnames( alt.qc ) )] -->
-<!-- rownames(gbm10.Rb)<-gbm10.annovar$Gene.refGene -->
-<!-- # bulk total read counts -->
-<!-- gbm10.Xb<-alt.qc[,grepl( "DNA" , colnames( alt.qc ) )]+ -->
-<!--           ref.qc[,grepl( "DNA" , colnames( alt.qc ) )] -->
-<!-- rownames(gbm10.Xb)<-gbm10.annovar$Gene.refGene -->
-
-<!-- N<-ncol(gbm10.Rs) #number of single cells -->
-<!-- M<-nrow(gbm10.Rs) #number of mutations -->
-<!-- S<-ncol(gbm10.Rb) #number of bulk samples -->
-<!-- niter<-500 #number of iterations of MCMC -->
-
-<!-- #pre-process gene expression data -->
-<!-- gbm10.featurecounts.qc<-get_gene_expression(featurecounts=featurecounts.qc, -->
-<!--                                             annovar=annovar, -->
-<!--                                             build=37) -->
-<!-- ``` -->
-
-<!-- The parameters for bursting kinetics are then estimated using the [BPSC](https://academic.oup.com/bioinformatics/article/32/14/2128/2288270) methodology. For some genes, due to the sparsity of the expression data, [BPSC](https://academic.oup.com/bioinformatics/article/32/14/2128/2288270) may return negative estimates. In these situations, since negative parameter estimates are not allowed for the beta-binomial distribution, we must drop these genes from the read counts before continuing. -->
-
-<!-- ```{r} -->
-<!-- #get parameter estimates for bursting kinetics -->
-<!-- param.gbm10<-get_burstiness_scale(featurecounts=gbm10.featurecounts.qc,N) -->
-<!-- #gene activation rate -->
-<!-- param.gbm10$alpha -->
-<!-- summary(param.gbm10$alpha) -->
-<!-- #gene deactivation rate -->
-<!-- param.gbm10$beta -->
-<!-- summary(param.gbm10$beta) -->
-
-<!-- #retain only those read counts that correspond to estimated parameters -->
-<!-- gbm10.Rs<-gbm10.Rs[param.gbm10$id.g,] #subset single cell alternative read counts -->
-<!-- gbm10.Xs<-gbm10.Xs[param.gbm10$id.g,] #subset single cell total read counts -->
-<!-- gbm10.Rb<-gbm10.Rb[param.gbm10$id.g,] #subset bulk alternative counts -->
-<!-- gbm10.Xb<-gbm10.Xb[param.gbm10$id.g,] #subset bulk total read counts -->
-<!-- ``` -->
-
-<!-- Finally, now that we have estimates for $\alpha$ and $\beta$, we can produce the posterior trees, diagnostic plots, and best tree based on a user-selected information criterion (here BIC is chosen). -->
-
-<!-- ```{r} -->
-<!-- # Produce trees, posteriors and Metropolis-Hastings acceptance rate associated -->
-<!-- # with K subclones -->
-<!-- gbm10.trees<-get_trees(Rs=gbm10.Rs, Rb=gbm10.Rb, Xs=gbm10.Xs, Xb=gbm10.Xb, -->
-<!--                        alpha=param.gbm10$alpha, beta=param.gbm10$beta, -->
-<!--                        kappa, tau, Klist, niter, -->
-<!--                        nchains, thin, pburn, seed, code_dir) -->
-
-<!-- # Produce diagnostic plots for the lag autocorrelation factor, posterior -->
-<!-- # densities, and trace -->
-<!-- get_diagnostics(samples=gbm10.trees, nchains=nchains, Klist=Klist,pburn=pburn,     -->
-<!--                  project="GBM10",outpath=outpath) -->
-<!-- ``` -->
-
-<!-- ```{r, fig.width=6, fig.asp=1.5, out.width='70%'} -->
-<!-- # Produce the optimal number of K subclones, tree, posteriors, and -->
-<!-- # Metropolis-Hastings acceptance rate selected by using a user-supplied -->
-<!-- # information criterion -->
-<!-- gbm10.best.tree<-get_best_tree(samples=gbm10.trees, annovar=gbm10.annovar, Rs=gbm10.Rs, -->
-<!--                              Rb=gbm10.Rb, Klist=Klist, nchains=nchains, -->
-<!--                              criterion=criterion, plottree=T,outpath=outpath) -->
-<!-- gbm10.best.tree -->
-<!-- ``` -->
-
-<!-- # Breast Cancer dataset -->
-
-<!-- We will work specifically with the data from patient BC03. First, we import the read count and expression data, pre-processed using the SNV pipeline developed by our lab (see manuscript Supplemental Materials). Note that for the read count data, the last two columns, SRR3023078 and SRR3023080, correspond to the bulk samples. -->
-
-<!-- Again, to pre-process the gene expression data, we map Ensembl IDs to gene symbols, remove any duplicates for Ensembl ID, and then subset gene expression data to only those genes present in ANNOVAR output. -->
+Again, to pre-process the gene expression data, we map Ensembl IDs to gene symbols, remove any duplicates for Ensembl ID, and then subset gene expression data to only those genes present in ANNOVAR output. 
 
 <!-- ```{r} -->
 <!-- #load BC03 read counts -->

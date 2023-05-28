@@ -4,44 +4,74 @@
 #' number of chains x number of subclones. Sampling is performed using
 #' Metropolis-within-Gibbs. Output is of class \code{get_trees}.
 #'
-#' @param Rs mutation x cell matrix of integers. Denotes the number
-#' of alternative allele reads corresponding to variant m in cell n.
-#' Rownames must match those of argument \code{Rb}
-#' @param Rb mutation x bulk sample matrix of integers. Denotes the number
-#' of alternative allele reads corresponding to variant m in bulk sample s.
-#' Rownames must match those of argument \code{Rs}
-#' @param Xs mutation x cell matrix of integers. Denotes the number
-#' of total reads corresponding to variant m in cell n.
-#' Rownames must match those of argument \code{Xb}
-#' @param Xb mutation x bulk sample matrix of integers. Denotes the number
-#' of total reads corresponding to variant m in bulk sample s.
-#' Rownames must match those of argument \code{Xs}
-#' @param alpha numeric vector of values greater than 0 with length \eqn{M}
-#' (number of mutations) representing the gene activation rate. These can be
-#' estimated using the
-#' @param beta numeric vector of values greater than 0 with length \eqn{M}
-#' (number of mutations) representing the gene deactivation rate
+#' @param Rs \eqn{M} (mutations) x \eqn{N} (cells) matrix of single-cell
+#' alternative read counts. Rownames must match those of argument \code{Rb}.
+#' @param Rb \eqn{M} (mutations) x \eqn{S} (bulk samples) matrix of bulk
+#' alternative read counts. Rownames must match those of argument \code{Rs}.
+#' @param Xs \eqn{M} (mutations) x \eqn{N} (cells) matrix of single-cell
+#' total (benign + mutated) read counts. Rownames must match those of argument
+#' \code{Xb}.
+#' @param Xb \eqn{M} (mutations) x \eqn{S} (bulk samples) matrix of bulk total
+#' (benign + mutated) read counts. Rownames must match those of argument
+#' \code{Xs}.
+#' @param alpha numeric vector of positive values with length \eqn{M}
+#' (number of mutations) representing the gene activation rates.
+#' @param beta numeric vector of positive values with length \eqn{M}
+#' (number of mutations) representing the gene deactivation rates.
 #' @param kappa a positive value used in the computation of the
-#' sequencing error defined as \eqn{\kappa/(\kappa+\tau)}
+#' sequencing error defined as \eqn{\kappa/(\kappa+\tau)}.
 #' @param tau a positive value used in the computation of the sequencing error
-#' defined as \eqn{\kappa/(\kappa+\tau)}
-#' @param Klist numeric vector containing the possible numbers of subclones
+#' defined as \eqn{\kappa/(\kappa+\tau)}.
+#' @param Klist numeric vector containing the possible numbers of subclones.
 #' @param niter number of iterations of MCMC. Defaults to 10000.
 #' @param nchains number of chains for MCMC. Defaults to 20.
 #' @param thin a number representing the increment at which to store MCMC output.
 #'  For example, if \code{thin=10} then every 10th iteration is stored. Defaults
 #'  to 10.
 #' @param pburn a decimal denoting the percentage of burn-in to store. Defaults
-#' to 0.10 (10%).
+#' to 0.10 (10\%).
 #' @param seed a state (positive integer) to set the random number generation.
-#' Defaults to 1.
+#' Defaults to 8675309.
 #'
 #' @return
+#' An object of class "get_trees" containing: \code{N}, the number of
+#' single-cells, \code{S}, the number of bulk samples, \code{M}, the number of
+#' mutations, \code{Rs}, the single-cell alternative read count matrix,
+#' \code{Rb} the bulk alternative read count matrix, \code{Xs}, the single-cell
+#' total (benign + mutated) read count matrix, \code{Xb}, the bulk total
+#' (benign + mutated) read count matrix, \code{alpha}, a vector of
+#' mutation-specific gene activation rates, \code{beta}, a vector
+#' of mutation-specific gene deactivation rates, \code{kappa}, a numeric used to
+#' calculate the sequencing error rate, \code{tau}, a numeric used to calculate
+#' the sequencing error rate, \code{Klist}, a range of subclones to try,
+#' \code{nchains}, the number of MCMC chains, and \code{pburn}, the percentage of
+#' burn-in to remove.
+#'
 #' @export
 #'
 #' @examples
+#' #Load post-processed data for patient GBM10
+#' data("GBM10_postproc")
+#'
+#' # Run Canopy2 to get list of phylogenetic trees corresponding to all chains
+#' # and all subclones
+#' get.trees.out<-get_trees(Rs=GBM10_postproc@Rs, Rb=GBM10_postproc@Rb,
+#'                          Xs=GBM10_postproc@Xs, Xb=GBM10_postproc@Xb,
+#'                          alpha=GBM10_postproc@param.est$alpha,
+#'                          beta=GBM10_postproc@param.est$beta, kappa=1,
+#'                          tau=999, Klist=4:6, niter=1000, nchains=5, thin=10,
+#'                          pburn=0.1, seed=8675309)
+#'
+#' # Examine diagnostic plots
+#' get_diagnostics(get.trees.out, project=NULL, outpath=NULL)
+#'
+#' # Get best tree across all chains and subclones via DIC
+#' best.tree.out<-get_best_tree(get.trees.out)
+#'
+#' best.tree.out
+
 get_trees<-function(Rs, Rb, Xs, Xb, alpha, beta, kappa, tau,
-                    Klist, niter=10000, nchains=20, thin=10, pburn=0.1, seed=1){
+                    Klist, niter=10000, nchains=20, thin=10, pburn=0.1, seed=8675309){
 
   # check arguments
   if (!inherits(Rs, "matrix")){
@@ -336,22 +366,6 @@ get_trees<-function(Rs, Rb, Xs, Xb, alpha, beta, kappa, tau,
       post<-post[-c(1:burn.len)]
       accept<-accept[-c(1:burn.len)]
       accept.rate<-sum(accept)/length(accept)
-
-      # Sort Ps to aggregate 1's for better visualization
-      temp.mat<-matrix(NA,nrow=nrow(tree$Ps),ncol=1)
-      rownames(temp.mat)<-rownames(tree$Ps)
-      id.ones<-lapply(1:nrow(tree$Ps),function(x) which(tree$Ps[x,]==1))
-
-      # Generate mini binary matrices that are concatenated to create final matrix
-      for(list.id in 1:length(id.ones)){
-        temp.mat0<-matrix(0,nrow=nrow(tree$Ps),ncol=length(id.ones[[list.id]]))
-        temp.mat0[list.id,]<-1
-        colnames(temp.mat0)<-names(id.ones[[list.id]])
-        temp.mat<-cbind(temp.mat,temp.mat0)
-      }
-
-      # Remove vector of NAs
-      temp.mat<-temp.mat[,-1]
 
       return(list("K"=K,"tree"=tree.list,"posteriors"=post,"acceptance rate"=accept.rate))
       }

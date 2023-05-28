@@ -4,17 +4,42 @@
 \alias{get_burstiness_bpsc}
 \title{Estimate Bursting Kinetics with BPSC}
 \usage{
-get_burstiness_bpsc(featurecounts, N)
+get_burstiness_bpsc(counts)
 }
 \arguments{
-\item{featurecounts}{a matrix of scRNA-seq counts}
-
-\item{N}{number of single cells}
+\item{counts}{a gene x single-cell matrix of pre-processed scRNA-seq read counts.
+Only include count data; do not include any other features/columns like
+Ensembl ID or HGNC symbol. There is no need to normalize the counts by size
+factors, as this is performed by the function before computing the estimates.}
+}
+\value{
+A list containing: \code{alpha}, a vector of length M (mutations) that
+contains the mutation-specific gene activation rates, \code{beta}, a vector
+of length M containing the mutation-specific gene deactivation rates,
+\code{scale}, a vector of length M containing the mutation-specific
+transcription rates, \code{id.g}, a vector of IDs for which parameters can be
+estimated, and \code{pct.estimable}, a numeric indicating the percent which
+could be estimated.
 }
 \description{
-Using the BPSC methodology \insertCite{Vu2016}{Canopy2},
-estimate two parameters for bursting kinetics: the gene activation rate
-(alpha) and the gene deactivation rate (beta) from the gene expression data.
+Use the BPSC methodology \insertCite{Vu2016}{Canopy2} applied to single-cell
+gene expression data to estimate bursting kinetics parameters: gene
+activation rate (\code{alpha}), gene deactivation rate (\code{beta}), and transcription
+rate (\code{scale}). The function performs library size factor normalization internally.
+This methodology differs from the SCALE methodology \insertCite{Jiang2017}{Canopy2}
+utilized in \code{get_burstiness_scale} in that it estimates the
+parameters by MCMC sampling. While BPSC tends to be less computationally efficient
+than SCALE, we found that it had improved estimability (non-NA or negative
+values).
+}
+\examples{
+# Load post-processed data for patient GBM10
+data("GBM10_postproc")
+
+# Estimate bursting kinetics for the full dataset
+param.est<-get_burstiness_bpsc(counts=GBM10_postproc@featurecounts.qc)
+param.est
+
 }
 \references{
 {

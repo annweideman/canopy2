@@ -1,23 +1,45 @@
 #' Diagnostic Plots
 #'
-#' Plot posterior densities, trace, and lag autocorrelation factor (lag ACF) 
-#' associated with each number of subclones. 
+#' Plot posterior densities, trace, and lag autocorrelation factor (lag ACF)
+#' associated with each number of subclones, K.
 #' Requires output from function \code{get_trees()}.
 #'
 #' @param get.trees.out sample of phylogenetic trees output from function
 #' \code{get_trees()} of class \code{get_trees}.
-#' @param project a string specifying the project name to append to the filenames 
-#' when saving output. The final filenames for \code{get_diagnostics} output will 
-#' be \"project_lagACF.pdf\" (lag ACF plots), \"project_posteriors.pdf\" 
-#' (posterior densities), and \"project_trace.pdf\" (trace plots). 
-#' @param outpath a string specifying the location at which to save output 
+#' @param project a string specifying the project name to append to the filenames
+#' when saving output. The final filenames for \code{get_diagnostics} output will
+#' be "projectname_lagACF.pdf" (lag ACF plots), "projectname_posteriors.pdf"
+#' (posterior densities), and "projectname_trace.pdf" (trace plots).
+#' @param outpath a string specifying the location at which to save output
 #' generated from \code{get_diagnostics}.
 #'
 #' @return
+#' For each K, generates graphical displays of the posterior densities, trace,
+#' and lag ACF. These graphs can be viewed in R or exported to pdfs.
+#'
 #' @export
 #'
 #' @examples
+#' #Load post-processed data for patient GBM10
+#' data("GBM10_postproc")
 #'
+#' # Run Canopy2 to get list of phylogenetic trees corresponding to all chains
+#' # and all subclones
+#' get.trees.out<-get_trees(Rs=GBM10_postproc@Rs, Rb=GBM10_postproc@Rb,
+#'                          Xs=GBM10_postproc@Xs, Xb=GBM10_postproc@Xb,
+#'                          alpha=GBM10_postproc@param.est$alpha,
+#'                          beta=GBM10_postproc@param.est$beta, kappa=1,
+#'                          tau=999, Klist=4:6, niter=1000, nchains=5, thin=10,
+#'                          pburn=0.1, seed=8675309)
+#'
+#' # Examine diagnostic plots
+#' get_diagnostics(get.trees.out, project=NULL, outpath=NULL)
+#'
+#' # Get best tree across all chains and subclones via DIC
+#' best.tree.out<-get_best_tree(get.trees.out)
+#'
+#' best.tree.out
+
 get_diagnostics<-function(get.trees.out, project=NULL, outpath=NULL){
 
   if (!inherits(get.trees.out, "get_trees")){
@@ -37,7 +59,7 @@ get_diagnostics<-function(get.trees.out, project=NULL, outpath=NULL){
   }
 
   if(dev.cur() > 1) grDevices::dev.off()
-  
+
   samples<-get.trees.out$samples
   nchains<-get.trees.out$nchains
   Klist<-get.trees.out$Klist
@@ -92,7 +114,7 @@ get_diagnostics<-function(get.trees.out, project=NULL, outpath=NULL){
     }
   }
   if(is.null(outpath)==F){grDevices::dev.off()}
-  
+
   #-----------------------------------------------------------------------------
   # Plot trace
   #-----------------------------------------------------------------------------
@@ -118,10 +140,10 @@ get_diagnostics<-function(get.trees.out, project=NULL, outpath=NULL){
   #-----------------------------------------------------------------------------
 
   if(is.null(outpath)==F){
-    grDevices::pdf(file = paste0(outpath,"/", project, "_lagACF.pdf"), 
+    grDevices::pdf(file = paste0(outpath,"/", project, "_lagACF.pdf"),
                    onefile = TRUE, height=5)
   }
-  
+
   counter<-1
   stop<-0
   for (K in Klist) {
@@ -135,12 +157,12 @@ get_diagnostics<-function(get.trees.out, project=NULL, outpath=NULL){
         graphics::mtext(side=3, line=1.5, cex=1.2,
                       bquote("Lag ACF after"~.(pburn*100)*"% burn-in"),
                       outer=T)
-      graphics::mtext(side=3, line=0.5, cex=1.1, 
+      graphics::mtext(side=3, line=0.5, cex=1.1,
                       paste0("(K = ",K,")"), col="blue", outer=T)
       }
     }
     counter<-counter+1
   }
-  
+
   if(is.null(outpath)==F){grDevices::dev.off()}
 }

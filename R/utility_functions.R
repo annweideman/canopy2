@@ -226,6 +226,36 @@ flatten_list <- function(x){
   }
 }
 
+#----------------------------------------------------------------------
+# Map chromosome positions to gene IDs
+#----------------------------------------------------------------------
+get_BM_fun<-function(reads){
+
+  ensembl<-biomaRt::useEnsembl(biomart="ensembl",
+                               dataset="hsapiens_gene_ensembl",
+                               GRCh=37)
+  # Chromosome number
+  chr.num<-gsub("^[^-]+r|:.*", "", rownames(reads))
+  # Chromosome start position
+  start.pos<-end.pos<-gsub(".*:", "", rownames(reads))
+
+  temp.df<-data.frame()
+  for(i in 1:length(chr.num)){
+    # Get gene names associated with position of mutation
+    # Will output a range an upstream/downstream genes, choose very first range
+    getBM.out<-biomaRt::getBM(c("ensembl_gene_id","hgnc_symbol","chromosome_name",
+                                "start_position","end_position"),
+                              filters = c("chromosome_name", "start"),
+                              values = list(chr.num[i],start.pos[i]), mart = ensembl)[1,]
+    temp.df<-rbind(temp.df,getBM.out)
+  }
+
+  # Append gene symbol to read counts as first column
+  reads<-cbind.data.frame(temp.df$hgnc_symbol,reads)
+  colnames(reads)[1]<-"hgnc_symbol"
+  reads
+}
+
 #-------------------------------------------------------------------------------
 # Function to further process gene expression data:
 # 1. Map Ensembl IDs to gene symbols
@@ -416,7 +446,8 @@ plot_tree <- function(tree, annovar=NULL, save.muts=F, save.plot=F,
   }
 
   edge.label <- sort(unique(snvedge))
-  mut.list=matrix(nrow=length(edge.label),ncol=1)
+  mut.branch.mat=matrix(nrow=length(edge.label),ncol=1)
+  #mut.branch.mat<-list()
   if(is.null(annovar)){snv.name=rownames(tree$Z)
   }else{
     snv.name=rownames(Rs)}
@@ -424,8 +455,11 @@ plot_tree <- function(tree, annovar=NULL, save.muts=F, save.plot=F,
   # Generate list of mutation clusters
   for (i in 1:length(edge.label)) {
     gene <- snv.name[which(snvedge == edge.label[i])]
-    mut.list[i,1]=paste0("M", i, ": ", paste(gene, collapse = ', '))
+    mut.branch.mat[i,1]=paste0("M", i, ": ", paste(gene, collapse = ', '))
+    #mut.list<-c(mut.list,paste(gene,collapse = ', '))
   }
+
+  #names(mut.list)<-paste0("M",1:length(mut.list))
 
   # Generate plot for Z
   p1 <- plot_Z(tree)
@@ -434,6 +468,7 @@ plot_tree <- function(tree, annovar=NULL, save.muts=F, save.plot=F,
   p2 <- ggplotify::as.grob(function(){
     graphics::par(mar = c(1, 1, 0, 5))
     P <- tree$Ps
+    N <- ncol(tree$Ps)
     graphics::image(1:nrow(P), 1:N, axes = FALSE, ylab = "", xlab = "",
                     as.matrix(P[,1:N]), breaks = 0:100/100,
                     col = viridis::turbo(100,begin=0.05,end=0.95),useRaster=T)
@@ -457,6 +492,7 @@ plot_tree <- function(tree, annovar=NULL, save.muts=F, save.plot=F,
     #bottom, left, top and right margins
     graphics::par(mar = c(1, 1, 1, 5))
     P <- tree$Pb
+    S <- ncol(tree$Pb)
     graphics::image(x=1:nrow(P), y=1:S, axes = FALSE, ylab = "", xlab = "",
                     z=as.matrix(P[,1:S]), breaks = 0:100/100,
                     col = viridis::turbo(100,begin=0.05,end=0.95))
@@ -476,14 +512,13 @@ plot_tree <- function(tree, annovar=NULL, save.muts=F, save.plot=F,
     }
   })
 
-
   ggp<-ggplot2::ggplot(data.frame(x = seq(0.1,1,0.1), y = seq(0.1,1,0.1), z=seq(0.1,1,0.1)),
               ggplot2::aes(x = x, y = y, fill=z)) +
     ggplot2::geom_tile() + viridis::scale_fill_viridis(option="turbo", limits=c(0,1)) +
     ggplot2::theme(legend.position = c(0.45,.5),
           legend.direction="horizontal",
-          legend.key.height = unit(0.5, 'cm'),
-          legend.key.width = unit(1.5, "cm"))+labs(fill = "Prob")
+          legend.key.height = grid::unit(0.5, 'cm'),
+          legend.key.width = grid::unit(1.5, "cm"))+ggplot2::labs(fill = "Prob")
 
   ggp_legend <- cowplot::get_legend(ggp) # Save legend
   grid::grid.newpage()  # Draw empty plot window
@@ -495,18 +530,12 @@ plot_tree <- function(tree, annovar=NULL, save.muts=F, save.plot=F,
   p <- gridExtra::arrangeGrob(p1,p2,p3,p4,layout_matrix = lay)
   grid::grid.draw(p)
 
-  # if TRUE, save text file containing all mutations along the branches
-  if (save.muts){
-    utils::write.table(mut.list, file = paste0(outpath,"/", project, "_muts.txt"),
-                       col.names = FALSE, row.names = FALSE,
-                       quote = FALSE, sep = '\t')
-  }
   # if TRUE, save the plot of the best tree
   if (save.plot){
     ggplot2::ggsave(filename=paste0(project,"_plot_tree.jpg"), plot=p, path=outpath,
                     height=7, width=7, units="in", limitsize=F, device="jpg")
   }
-  return(mut.list)
+  return(mut.branch.mat)
 }
 
 #-------------------------------------------------------------------------------

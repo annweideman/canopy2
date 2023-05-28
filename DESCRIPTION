@@ -33,6 +33,7 @@ Imports:
     ggtree,
     gridExtra,
     gtools,
+    magrittr,
     Rdpack,
     SCALE (>= 1.3.0),
     viridis

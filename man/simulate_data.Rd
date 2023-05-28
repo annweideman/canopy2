@@ -17,9 +17,8 @@ simulate_data(
   b.maxdepth,
   sc.mindepth,
   sc.maxdepth,
-  lam1 = 3000,
-  lam2 = 1,
-  seed = 1
+  scale,
+  seed = 8675309
 )
 }
 \arguments{
@@ -30,16 +29,16 @@ simulate_data(
 \item{M}{number of mutations (single nucleotide variants)}
 
 \item{alpha}{a positive integer representing the gene activation rate. This
-number will be replicated to form a vector of length \eqn{K}.}
+number will be replicated to form a vector of length \eqn{M} (number of mutations).}
 
 \item{beta}{a positive integer representing the gene deactivation rate. This
-number will be replicated to form a vector of length \eqn{K}.}
+number will be replicated to form a vector of length \eqn{M} (number of mutations).}
 
 \item{kappa}{a positive value used in the computation of the sequencing error
-defined as \eqn{\kappa/(\kappa+\tau)}}
+defined as \eqn{\kappa/(\kappa+\tau)}. Defaults to 1.}
 
 \item{tau}{a positive value used in the computation of the sequencing error
-defined as \eqn{\kappa/(\kappa+\tau)}}
+defined as \eqn{\kappa/(\kappa+\tau)}. Defaults to 999.}
 
 \item{Ktrue}{true number of subclones}
 
@@ -55,14 +54,44 @@ depth of the single-cell data}
 \item{sc.maxdepth}{a positive value that represents the maximum sequencing
 depth of the single-cell data}
 
-\item{lam1}{a positive value that represents the scaling factor for beta
+\item{scale}{a positive value that represents the scaling factor for beta
 distribution (the rate at which DNA transcribed into RNA)}
 
-\item{lam2}{a positive value that represents the scaling factor for Poisson
-distribution so that it can allow for fractional expression values}
-
-\item{seed}{a state (positive integer) to set the random number generation}
+\item{seed}{a state (positive integer) to set the random number generation.
+Defaults to 8675309.}
+}
+\value{
+A list containing: \code{true.tree}, the true/known phylogenetic tree,
+\code{Rs}, a matrix of single-cell alternative read counts, \code{Rb}, a
+matrix of bulk alternative read counts, \code{Xs}, a matrix of single-cell
+total (benign + mutated) read counts, \code{Xb}, a matrix of bulk total
+(benign + mutated) read counts, \code{alpha}, the mutation-specific gene
+activation rates, \code{beta}, the mutation-specific gene deactivation rates,
+and \code{G}, an \eqn{M} (mutation) x \eqn{N} (cell) matrix of single-cell gene
+expression data.
 }
 \description{
 Simulates data for Canopy2 from a beta-binomial distribution.
+}
+\examples{
+# Simulate read counts
+sims.out<-simulate_data(N=30, S=4, M=15, alpha=0.1, beta=1, kappa=1, tau=999,
+                        Ktrue=4, b.mindepth=30, b.maxdepth=50, sc.mindepth=80,
+                        sc.maxdepth=120, scale=300, seed=8675309)
+
+# Run Canopy2 to get list of phylogenetic trees corresponding to all chains
+# and all subclones
+get.trees.out<-get_trees(Rs=sims.out$Rs, Rb=sims.out$Rb,
+                         Xs=sims.out$Xs, Xb=sims.out$Xb,
+                         alpha=sims.out$alpha, beta=sims.out$beta,
+                         kappa=1, tau=999, Klist=3:5,
+                         niter=10000, nchains=5, thin=10, pburn=0.1, seed=8675309)
+
+# Examine diagnostic plots
+get_diagnostics(get.trees.out, project=NULL, outpath=NULL)
+
+# Get best tree across all chains and subclones via DIC
+best.tree.out<-get_best_tree(get.trees.out)
+
+best.tree.out
 }

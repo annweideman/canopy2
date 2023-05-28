@@ -10,13 +10,41 @@ get_diagnostics(get.trees.out, project = NULL, outpath = NULL)
 \item{get.trees.out}{sample of phylogenetic trees output from function
 \code{get_trees()} of class \code{get_trees}.}
 
-\item{project}{a project name to add to the filename for output generated
-from \code{save.muts} and \code{save.plot}.}
+\item{project}{a string specifying the project name to append to the filenames
+when saving output. The final filenames for \code{get_diagnostics} output will
+be "projectname_lagACF.pdf" (lag ACF plots), "projectname_posteriors.pdf"
+(posterior densities), and "projectname_trace.pdf" (trace plots).}
 
-\item{outpath}{a location at which to save output generated from
-\code{save.muts} and \code{save.plot}.}
+\item{outpath}{a string specifying the location at which to save output
+generated from \code{get_diagnostics}.}
+}
+\value{
+For each K, generates graphical displays of the posterior densities, trace,
+and lag ACF. These graphs can be viewed in R or exported to pdfs.
 }
 \description{
-Plot posterior densities, trace, and lag autocorrelation factor (lag ACF).
+Plot posterior densities, trace, and lag autocorrelation factor (lag ACF)
+associated with each number of subclones, K.
 Requires output from function \code{get_trees()}.
+}
+\examples{
+#Load post-processed data for patient GBM10
+data("GBM10_postproc")
+
+# Run Canopy2 to get list of phylogenetic trees corresponding to all chains
+# and all subclones
+get.trees.out<-get_trees(Rs=GBM10_postproc@Rs, Rb=GBM10_postproc@Rb,
+                         Xs=GBM10_postproc@Xs, Xb=GBM10_postproc@Xb,
+                         alpha=GBM10_postproc@param.est$alpha,
+                         beta=GBM10_postproc@param.est$beta, kappa=1,
+                         tau=999, Klist=4:6, niter=1000, nchains=5, thin=10,
+                         pburn=0.1, seed=8675309)
+
+# Examine diagnostic plots
+get_diagnostics(get.trees.out, project=NULL, outpath=NULL)
+
+# Get best tree across all chains and subclones via DIC
+best.tree.out<-get_best_tree(get.trees.out)
+
+best.tree.out
 }

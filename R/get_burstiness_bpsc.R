@@ -1,25 +1,39 @@
 #' Estimate Bursting Kinetics with BPSC
 #'
 #' Use the BPSC methodology \insertCite{Vu2016}{Canopy2} applied to single-cell
-#' gene expression data to estimate bursting kinetics parameters: gene 
-#' activation rate (alpha), gene deactivation rate (beta), and transcription 
-#' rate (scale). The function performs library size factor normalization internally. 
+#' gene expression data to estimate bursting kinetics parameters: gene
+#' activation rate (\code{alpha}), gene deactivation rate (\code{beta}), and transcription
+#' rate (\code{scale}). The function performs library size factor normalization internally.
 #' This methodology differs from the SCALE methodology \insertCite{Jiang2017}{Canopy2}
-#' utilized in \link[Canopy2]{get_burstiness_scale} in that it estimates the 
-#' parameters by MCMC sampling. While BPSC tends to be less computationally efficient 
-#' than SCALE, we found that it had improved estimability (non-NA or negative 
+#' utilized in \code{get_burstiness_scale} in that it estimates the
+#' parameters by MCMC sampling. While BPSC tends to be less computationally efficient
+#' than SCALE, we found that it had improved estimability (non-NA or negative
 #' values).
 #'
-#' @param counts a gene x single-cell matrix of pre-processed scRNA-seq counts.
-#' Only include count data; do not include any other features/columns like 
-#' Ensembl ID or HGNC symbol. There is no need to normalize the counts by size 
+#' @param counts a gene x single-cell matrix of pre-processed scRNA-seq read counts.
+#' Only include count data; do not include any other features/columns like
+#' Ensembl ID or HGNC symbol. There is no need to normalize the counts by size
 #' factors, as this is performed by the function before computing the estimates.
 #'
 #' @return
+#' A list containing: \code{alpha}, a vector of length M (mutations) that
+#' contains the mutation-specific gene activation rates, \code{beta}, a vector
+#' of length M containing the mutation-specific gene deactivation rates,
+#' \code{scale}, a vector of length M containing the mutation-specific
+#' transcription rates, \code{id.g}, a vector of IDs for which parameters can be
+#' estimated, and \code{pct.estimable}, a numeric indicating the percent which
+#' could be estimated.
 #' @import Rdpack
 #' @export
 #'
 #' @examples
+#' # Load post-processed data for patient GBM10
+#' data("GBM10_postproc")
+#'
+#' # Estimate bursting kinetics for the full dataset
+#' param.est<-get_burstiness_bpsc(counts=GBM10_postproc@featurecounts.qc)
+#' param.est
+#'
 #' @references{
 #'   \insertAllCited{}
 #' }
@@ -44,7 +58,7 @@ get_burstiness_bpsc<-function(counts){
 
   # Apply the size factors to the raw counts to produce normalized counts
   normalized.counts<-counts*size.factors
-  
+
   # Estimate parameters from normalized data
   mat.BP<-BPSC::estimateBPMatrix(normalized.counts, para.num=4, estIntPar=F)
 
@@ -66,6 +80,6 @@ get_burstiness_bpsc<-function(counts){
   # scale - transcription rate
   scale<-sapply(1:length(theta.g), function(x) theta.g[[x]][3])
 
-  return(list(alpha=alpha, beta=beta, scale=scale, 
+  return(list(alpha=alpha, beta=beta, scale=scale,
               id.g=id.g, pct.estimable=pct.estimable))
 }
