@@ -1,4 +1,7 @@
-# canopy2
+
+![Canopy2_logo](https://github.com/annweideman/canopy2/assets/52984250/67f8e7d5-a400-42dc-af35-eada1e37119d)
+
+# Method
 Canopy2: tumor phylogeny inference using bulk DNA and single-cell RNA sequencing
 
 # Author
