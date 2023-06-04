@@ -186,34 +186,6 @@ are_z_fun <- function(true.Z, inferred.Z){
 }
 
 #-------------------------------------------------------------------------------
-# Compute deviance information criterion (DIC) according to Spiegelhalter defn
-#-------------------------------------------------------------------------------
-dic_fun <- function(logPost.mean, Z.mean, Ps.mean, Pb.mean, Rb,
-                    Xb, Rs, Xs, alpha, beta, kappa, tau) {
-
-  # Mixture of beta-binomial likelihoods for the single cell data
-  Qs <- Z.mean%*%Ps.mean
-  logPost <- sum((logdBetaBinom(Rs, Xs, alpha, beta))*Qs+
-                   (logdBetaBinom(Rs, Xs, kappa, tau))*(1-Qs))
-
-  # Combine with binomial likelihood (written up to a proportionality constant)
-  # for the bulk data
-  Qb <- pmin(pmax(1/2*Z.mean%*%Pb.mean, 0.01),0.99)
-  logPost <- logPost+sum(Rb*log(Qb)+(Xb-Rb)*log(1-Qb))
-
-  #logPost.mean <- mean(sapply(1:length(samples$tree), function(x)
-  #                     getPost(samples$tree[[x]], Rb, Xb, Rs, Xs,
-  #                             alpha, beta, kappa, tau)))
-
-  # Effective number of parameters
-  pD <- -2*logPost.mean-(-2*logPost)
-  # Spiegelhalter defn of DIC
-  DIC <- -2*logPost+2*pD
-
-  return(DIC)
-}
-
-#-------------------------------------------------------------------------------
 # Flatten a list of lists
 #-------------------------------------------------------------------------------
 flatten_list <- function(x){
