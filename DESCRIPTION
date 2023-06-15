@@ -1,4 +1,4 @@
-Package: Canopy2
+Package: canopy2
 Type: Package
 Title: Canopy2: Tumor Phylogeny Inference Using Bulk DNA and Single-Cell RNA Sequencing
 Version: 0.0.1

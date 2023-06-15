@@ -17,8 +17,6 @@
 #' For each K, generates graphical displays of the posterior densities, trace,
 #' and lag ACF. These graphs can be viewed in R or exported to pdfs.
 #'
-#' @export
-#'
 #' @examples
 #' #Load post-processed data for patient GBM10
 #' data("GBM10_postproc")
@@ -39,6 +37,8 @@
 #' best.tree.out<-get_best_tree(get.trees.out)
 #'
 #' best.tree.out
+#'
+#' @export
 
 get_diagnostics<-function(get.trees.out, project=NULL, outpath=NULL){
 

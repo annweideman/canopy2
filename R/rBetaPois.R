@@ -11,19 +11,21 @@
 #' estimated by using \code{get_burstiness_bpsc},
 #' \code{get_burstiness_scale}, or other method of the user's choosing.
 #' @return A vector of the random variates
-#' @export
+#'
 #' @examples
 #' set.seed(8675309)
 #' bp.vec=rBetaPois(100,0.1,1.0,3000)
 #' hist(bp.vec, prob=T)
 #'
+#' @export
+
 rBetaPois = function(n,alpha,beta,scale=1) {
 
   if (n <= 0 | !is.numeric(n) | n!=round(n)){
     stop("n must be a positive integer")
   }
 
-  if(alpha<=0 | !is.numeric(alpha)){
+  if(alpha<=0 | !is.numeric(alpha)){c
     stop("alpha must be a number greater than 0.")
   }
 

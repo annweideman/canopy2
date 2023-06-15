@@ -12,8 +12,6 @@
 #' The first subclone, "Clone 1" should not have any assigned mutations since it
 #' corresponds to the normal subclone.
 #'
-#' @export
-#'
 #' @examples
 #' # Load post-processed data for patient GBM10
 #' data("GBM10_postproc")
@@ -37,6 +35,8 @@
 #' clonal.muts<-get_clonal_composition(tree=best.tree.out$tree)
 #'
 #' clonal.muts
+#'
+#' @export
 
 get_clonal_composition = function(tree) {
   snaname = rownames(tree$snv)

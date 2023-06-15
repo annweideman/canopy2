@@ -28,7 +28,7 @@ objects from slots using @.
 post-processed functional annotations of the somatic variants. For details
 regarding the column headers, we refer readers to the extensive
 ANNOVAR \href{https://annovar.openbioinformatics.org/}{documentation} and the
-original research article \insertCite{Wang2010}{Canopy2}. Only those
+original research article \insertCite{Wang2010}{canopy2}. Only those
 annotations corresponding to mutations with at least one non-zero count
 across all cells were retained.
 

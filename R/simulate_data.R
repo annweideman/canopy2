@@ -37,21 +37,19 @@
 #' and \code{G}, an \eqn{M} (mutation) x \eqn{N} (cell) matrix of single-cell gene
 #' expression data.
 #'
-#' @export
-#'
 #' @examples
 #' # Simulate read counts
-#' sims.out<-simulate_data(N=30, S=4, M=15, alpha=0.1, beta=1, kappa=1, tau=999,
-#'                         Ktrue=4, b.mindepth=30, b.maxdepth=50, sc.mindepth=80,
-#'                         sc.maxdepth=120, scale=300, seed=8675309)
+#' sims.out<-simulate_data(N=15, S=2, M=5, alpha=0.1, beta=1, kappa=1, tau=999,
+#'                        Ktrue=4, b.mindepth=30, b.maxdepth=50, sc.mindepth=80,
+#'                        sc.maxdepth=120, scale=300, seed=8675309)
 #'
 #' # Run Canopy2 to get list of phylogenetic trees corresponding to all chains
 #' # and all subclones
 #' get.trees.out<-get_trees(Rs=sims.out$Rs, Rb=sims.out$Rb,
-#'                          Xs=sims.out$Xs, Xb=sims.out$Xb,
-#'                          alpha=sims.out$alpha, beta=sims.out$beta,
-#'                          kappa=1, tau=999, Klist=3:5,
-#'                          niter=10000, nchains=5, thin=10, pburn=0.1, seed=8675309)
+#'                         Xs=sims.out$Xs, Xb=sims.out$Xb,
+#'                         alpha=sims.out$alpha, beta=sims.out$beta,
+#'                         kappa=1, tau=999, Klist=3:5,
+#'                         niter=5000, nchains=3, thin=10, pburn=0.1, seed=8675309)
 #'
 #' # Examine diagnostic plots
 #' get_diagnostics(get.trees.out, project=NULL, outpath=NULL)
@@ -60,6 +58,8 @@
 #' best.tree.out<-get_best_tree(get.trees.out)
 #'
 #' best.tree.out
+#'
+#' @export
 
 simulate_data<-function(N, S, M, alpha, beta, kappa=1, tau=999, Ktrue,
                         b.mindepth, b.maxdepth, sc.mindepth, sc.maxdepth,

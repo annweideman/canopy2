@@ -1,7 +1,7 @@
 #' Sample space of phylogenetic trees
 #'
 #' Produce a list of phylogenetic trees in a sample space of size
-#' number of chains x number of subclones. Sampling is performed using
+#' (number of chains) x (number of subclones). Sampling is performed using
 #' Metropolis-within-Gibbs. Output is of class \code{get_trees}.
 #'
 #' @param Rs \eqn{M} (mutations) x \eqn{N} (cells) matrix of single-cell
@@ -47,8 +47,6 @@
 #' \code{nchains}, the number of MCMC chains, and \code{pburn}, the percentage of
 #' burn-in to remove.
 #'
-#' @export
-#'
 #' @examples
 #' #Load post-processed data for patient GBM10
 #' data("GBM10_postproc")
@@ -69,6 +67,8 @@
 #' best.tree.out<-get_best_tree(get.trees.out)
 #'
 #' best.tree.out
+#'
+#' @export
 
 get_trees<-function(Rs, Rb, Xs, Xb, alpha, beta, kappa, tau,
                     Klist, niter=10000, nchains=20, thin=10, pburn=0.1, seed=8675309){

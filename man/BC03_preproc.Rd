@@ -20,7 +20,7 @@ above labels from the SNV callset of patient BC03.
 functional annotation of the somatic variants for BC03. For details regarding
 the column headers, we refer readers to the extensive
 ANNOVAR \href{https://annovar.openbioinformatics.org/}{documentation} and the
-original research article \insertCite{Wang2010}{Canopy2}.
+original research article \insertCite{Wang2010}{canopy2}.
 
 \code{BC03_preproc@featurecounts.qc}   A 63677 x 75 matrix of
 pre-processed mapped reads from single-cell gene expression data. The row
@@ -53,7 +53,7 @@ BC03_preproc
 Pre-processed single-cell RNA sequencing (scRNA-seq), bulk RNA sequencing
 (bulk RNA-seq), and bulk DNA whole exome sequencing data (bulk DNA WES) from
 one patient (BC03) of 11 individuals (BC01-BC11) with primary breast cancer
-\insertCite{Chung2017}{Canopy2}. The single-nucleotide variant (SNV) pipeline
+\insertCite{Chung2017}{canopy2}. The single-nucleotide variant (SNV) pipeline
 utilized to pre-process the data is described in the main text and supplement.
 In the main study, the authors sequenced 549 primary breast cancer cells and
 matched bulk tumors and/or pooled cells from 11 patients, including two lymph node

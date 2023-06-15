@@ -22,11 +22,11 @@ estimated, and \code{pct.estimable}, a numeric indicating the percent which
 could be estimated.
 }
 \description{
-Use the BPSC methodology \insertCite{Vu2016}{Canopy2} applied to single-cell
+Use the BPSC methodology \insertCite{Vu2016}{canopy2} applied to single-cell
 gene expression data to estimate bursting kinetics parameters: gene
 activation rate (\code{alpha}), gene deactivation rate (\code{beta}), and transcription
 rate (\code{scale}). The function performs library size factor normalization internally.
-This methodology differs from the SCALE methodology \insertCite{Jiang2017}{Canopy2}
+This methodology differs from the SCALE methodology \insertCite{Jiang2017}{canopy2}
 utilized in \code{get_burstiness_scale} in that it estimates the
 parameters by MCMC sampling. While BPSC tends to be less computationally efficient
 than SCALE, we found that it had improved estimability (non-NA or negative

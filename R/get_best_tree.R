@@ -1,7 +1,9 @@
 #' Best Phylogenetic Tree
 #'
 #' Produce the optimal configuration of the phylogenetic tree by using the
-#' deviance information criterion (DIC).
+#' deviance information criterion (DIC) computed via the
+#' Gelman \insertCite{gelman2003}{canopy2} or Spiegelhalter
+#' \insertCite{Spiegelhalter2002}{canopy2} definitions.
 #'
 #' @param get.trees.out sample of phylogenetic trees output from function
 #' \code{get_trees()} of class \code{get_trees}.
@@ -19,10 +21,26 @@
 #' Defaults to \code{FALSE}.
 #' @param project a string specifying the project name to add to the filename
 #' for output generated from \code{save.muts} and \code{save.plot}. The final
-#' filenames for \code{save.muts} and \code{save.plot} will be "projectname_muts.txt"
-#' and "projectname_plot_tree.jpg," respectively.
+#' filenames for \code{save.muts} and \code{save.plot} will be "[projectname]_muts.txt"
+#' and "[projectname]_plot_tree.jpg," respectively.
 #' @param outpath a string specifying the location at which to save output
 #' generated from \code{save.muts} and \code{save.plot}.
+#'
+#' @details
+#' DIC is computed by two definitions: Gelman \insertCite{gelman2003}{canopy2}
+#' or Spiegelhalter \insertCite{Spiegelhalter2002}{canopy2}. For both
+#' definitions, the deviance information criterion is calculated as
+#'
+#' \deqn{DIC = -2log(p(y|\bar{\theta}))+2p_{DIC},}
+#'
+#' where \eqn{y} denotes the observed data and \eqn{\bar{\theta}=E(\theta|y)}
+#' denotes the posterior mean.
+#'
+#' In the above, \eqn{p_{DIC}} represents the effective number of parameters, which
+#' differs in definition based on the method employed. For Gelman,
+#' \eqn{p_{DIC, Gelman}=2\text{var}_{\text{post}}(\text{log}(p(y|\theta)))}, and for
+#' Spiegelhalter,
+#' \eqn{p_{DIC, Spiegel} = 2[\text{log}(p(y|\bar{\theta}))-E_{post}(\text{log}(p(y|\theta)))]}.
 #'
 #' @return
 #' A list containing: \code{K}, a numeric corresponding to the optimal number of
@@ -36,7 +54,6 @@
 #' all subclones, and \code{acceptance.rate}, a numeric corresponding to the MCMC
 #' acceptance rate for the best tree.
 #' @import magrittr
-#' @export
 #'
 #' @examples
 #' #Load post-processed data for patient GBM10
@@ -58,6 +75,8 @@
 #' best.tree.out<-get_best_tree(get.trees.out)
 #'
 #' best.tree.out
+#'
+#' @export
 
 get_best_tree<-function(get.trees.out,
                         method="spiegelhalter",
@@ -135,18 +154,36 @@ get_best_tree<-function(get.trees.out,
     # Store samples associated with the best chain
     best.chain<-samples[[id.max.post+counter]]
 
+    # Store log posteriors associated with best chain
+    logPost<-best.chain$posteriors
+
     # Compute the mean of the posterior samples from the best chain
     logPost.mean<-mean(best.chain$posteriors)
 
-    # Compute DIC under Gelman definition
+    #---------------------------------------------------------------------------
+    # In the below calculations for DIC:
+    # i)  logPost is a vector of log posteriors
+    # i)  logPost.thetabar denotes the log of the mean posterior samples
+    # ii) logPost.mean denotes the mean of the log posteriors (i.e., the
+    #     mean of logPost)
+    #-------------------------------------------------------------------------
+    # Compute DIC via Gelman definition
+    # Gelman et al. Bayesian Data Analysis. 3rd Edition, 2013 (Chapter 7.2, p173)
+    # Free, non-commercial version here: http://www.stat.columbia.edu/~gelman/book/BDA3.pdf
     if(method=="gelman"){
 
-      # Compute DIC via Gelman defn
-      DIC<-.5*var(best.chain$posteriors) + -2*logPost.mean
+      # Compute effective number of parameters
+      pD_gelman <- 2*var(logPost)
+      # Compute DIC
+      DIC<- -2*logPost.thetabar + 2*pD_gelman
 
     } # End if
 
+    #---------------------------------------------------------------------------
     # Compute DIC via Spiegelhalter defn
+    # https://www.mrc-bsu.cam.ac.uk/wp-content/uploads/DIC-slides.pdf
+    # Spiegelhalter et al. 2002, Bayesian measures of model complexity and fit
+    #---------------------------------------------------------------------------
     if(method=="spiegelhalter"){
 
       # Parameter means (theta_bar) for DIC
@@ -162,9 +199,22 @@ get_best_tree<-function(get.trees.out,
                       function(x) best.chain$tree[[x]]$Pb)
       Pb.mean<-apply(simplify2array(Pb.list), 1:2, mean)
 
-      # Compute DIC
-      DIC<-dic_fun(logPost.mean, Z.mean, Ps.mean,
-                   Pb.mean, Rb, Xb, Rs, Xs, alpha, beta, kappa, tau)
+      # Mixture of beta-binomial likelihoods for the single cell data
+      Qs <- Z.mean%*%Ps.mean
+      logPost.thetabar <- sum((logdBetaBinom(Rs, Xs, alpha, beta))*Qs+
+                              (logdBetaBinom(Rs, Xs, kappa, tau))*(1-Qs))
+
+      # Combine with binomial likelihood (written up to a proportionality constant)
+      # for the bulk data
+      Qb <- pmin(pmax(1/2*Z.mean%*%Pb.mean, 0.01),0.99)
+      #log of mean posterior samples
+      logPost.thetabar <- logPost.thetabar+sum(Rb*log(Qb)+(Xb-Rb)*log(1-Qb))
+
+      # Compute effective number of parameters
+      pD_spiegel <- 2*(logPost.thetabar-logPost.mean)
+      # Spiegelhalter defn of DIC
+      DIC <- -2*logPost.thetabar+2*pD_spiegel
+
     } # End if
 
     # Store the id of the final tree corresponding to best chain

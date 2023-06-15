@@ -38,7 +38,7 @@ above labels from the SNV callset of patient GBM9.
 functional annotation of the somatic variants for GBM9. For details regarding
 the column headers, we refer readers to the extensive
 ANNOVAR \href{https://annovar.openbioinformatics.org/}{documentation} and the
-original research article \insertCite{Wang2010}{Canopy2}.
+original research article \insertCite{Wang2010}{canopy2}.
 
 \code{GBM9_preproc@featurecounts.qc}   A 63677 x 126 matrix of
 pre-processed mapped reads from single-cell gene expression data. The row
@@ -73,7 +73,7 @@ Pre-processed single-cell RNA sequencing (scRNA-seq), bulk RNA sequencing
 one patient (GBM9) selected from 52 individuals with glioblastoma (GBM).
 The authors characterized genomic and expression profiles across 127
 multisector or longitudinal specimens with matched tumor/normal samples
-\insertCite{Lee2017}{Canopy2}. The single-nucleotide variant (SNV) pipeline
+\insertCite{Lee2017}{canopy2}. The single-nucleotide variant (SNV) pipeline
 utilized to pre-process the data is described in the main text and
 supplement. Tumor samples were acquired based on 4 categories: 1) locally
 adjacent tumors, 2) multifocal/multicentric tumors, 3) 5-ALA (+/-) tumors and

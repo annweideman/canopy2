@@ -36,8 +36,8 @@ Defaults to \code{FALSE}.}
 
 \item{project}{a string specifying the project name to add to the filename
 for output generated from \code{save.muts} and \code{save.plot}. The final
-filenames for \code{save.muts} and \code{save.plot} will be "projectname_muts.txt"
-and "projectname_plot_tree.jpg," respectively.}
+filenames for \code{save.muts} and \code{save.plot} will be "[projectname]_muts.txt"
+and "[projectname]_plot_tree.jpg," respectively.}
 
 \item{outpath}{a string specifying the location at which to save output
 generated from \code{save.muts} and \code{save.plot}.}
@@ -56,7 +56,25 @@ acceptance rate for the best tree.
 }
 \description{
 Produce the optimal configuration of the phylogenetic tree by using the
-deviance information criterion (DIC).
+deviance information criterion (DIC) computed via the
+Gelman \insertCite{gelman2003}{canopy2} or Spiegelhalter
+\insertCite{Spiegelhalter2002}{canopy2} definitions.
+}
+\details{
+DIC is computed by two definitions: Gelman \insertCite{gelman2003}{canopy2}
+or Spiegelhalter \insertCite{Spiegelhalter2002}{canopy2}. For both
+definitions, the deviance information criterion is calculated as
+
+\deqn{DIC = -2log(p(y|\bar{\theta}))+2p_{DIC},}
+
+where \eqn{y} denotes the observed data and \eqn{\bar{\theta}=E(\theta|y)}
+denotes the posterior mean.
+
+In the above, \eqn{p_{DIC}} represents the effective number of parameters, which
+differs in definition based on the method employed. For Gelman,
+\eqn{p_{DIC, Gelman}=2\text{var}_{\text{post}}(\text{log}(p(y|\theta)))}, and for
+Spiegelhalter,
+\eqn{p_{DIC, Spiegel} = 2[\text{log}(p(y|\bar{\theta}))-E_{post}(\text{log}(p(y|\theta)))]}.
 }
 \examples{
 #Load post-processed data for patient GBM10
