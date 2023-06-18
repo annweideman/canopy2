@@ -53,4 +53,5 @@ dist.Z$dist.metric
 
 # Print the permutation corresponding to the minimum distance metric
 dist.Z$mat.perm.min
+
 }

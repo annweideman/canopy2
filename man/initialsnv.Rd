@@ -20,7 +20,7 @@ A matrix with five columns: \code{snv} (the SNV number), \code{snv.strt.node}
 }
 \description{
 Generate point mutations (single-nucleotide variants, SNVs) along the tree
-branches.a
+branches.
 }
 \examples{
 # Generate a tree
@@ -31,4 +31,5 @@ tree <- ape::read.tree(text = text); rm(text)
 
 # Generate point mutations (single-nucleotide varaints) along the tree branches
 tree$snv<-initialsnv(tree, snv.name=paste("mut",1:5))
+
 }

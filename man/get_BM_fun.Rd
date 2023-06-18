@@ -28,4 +28,5 @@ data("GBM10_postproc")
 Rs<-getBM_fun(Rs)
 
 head(Rs)
+
 }

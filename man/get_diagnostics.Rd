@@ -27,6 +27,20 @@ Plot posterior densities, trace, and lag autocorrelation factor (lag ACF)
 associated with each number of subclones, K.
 Requires output from function \code{get_trees()}.
 }
+\details{
+Diagnostic plots are helpful for determining if there is evidence of
+convergence within the MCMC chains and also to assess agreement of these
+plots with the tree selected as opitmal from \code{\link[canopy2]{get_best_tree}}.
+
+The posterior densities from the individual chains should ideally sit close
+in space and each of the chains in the trace plots should be indistinguishable
+except for random noise. The lag autocorrelation factor (lag ACF) should drop
+to zero rather rapidly; large spikes that persist after lag 5 or 10 can be
+indicative of strong within chain correlation (autocorrelation). A large
+autocorrelation can imply that the sampling space is not properly explored
+and can result in convergence to a local (rather than global) optimum or
+convergence failure, altogether.
+}
 \examples{
 #Load post-processed data for patient GBM10
 data("GBM10_postproc")
@@ -43,8 +57,4 @@ get.trees.out<-get_trees(Rs=GBM10_postproc@Rs, Rb=GBM10_postproc@Rb,
 # Examine diagnostic plots
 get_diagnostics(get.trees.out, project=NULL, outpath=NULL)
 
-# Get best tree across all chains and subclones via DIC
-best.tree.out<-get_best_tree(get.trees.out)
-
-best.tree.out
 }

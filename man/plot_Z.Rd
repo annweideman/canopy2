@@ -64,4 +64,5 @@ tree$Ps<-Ps; rm(Ps)
 
 # Plot Z
 plot_Z(tree)
+
 }

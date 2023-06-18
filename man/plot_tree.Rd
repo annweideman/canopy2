@@ -86,4 +86,5 @@ tree$Ps<-Ps; rm(Ps)
 
 # Plot tree
 plot_tree(tree)
+
 }

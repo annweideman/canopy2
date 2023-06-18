@@ -50,4 +50,5 @@ best.tree.out<-get_best_tree(get.trees.out)
 
 # Compute absolute reconstruction error for Z
 are_z_fun(true.Z=sims.out$true.tree$Z, inferred.Z=best.tree.out$tree$Z)
+
 }

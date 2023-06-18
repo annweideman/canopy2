@@ -48,4 +48,5 @@ sims.out<-simulate_data(N=15, S=2, M=5, alpha=0.1, beta=1.0, kappa=1, tau=999,
 
 # Compute log beta-binomial density
 logdBetaBinom(sims.out$Rs, sims.out$Xs, sims.out$alpha, sims.out$beta)
+
 }

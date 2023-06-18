@@ -30,4 +30,5 @@ tree$snv<-initialsnv(tree, snv.name=paste("mut",1:5))
 
 # Get the Z matrix from tree and SNVs
 tree$Z <- getZ(tree)
+
 }

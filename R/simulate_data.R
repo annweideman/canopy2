@@ -1,6 +1,7 @@
 #' Simulate data for Canopy2
 #'
-#' Simulates data for Canopy2 from a beta-binomial distribution.
+#' Simulates read counts, parameters for sequencing error, and gene expression
+#' data for testing \code{Canopy2}.
 #'
 #' @param N number of single cells
 #' @param S number of bulk samples
@@ -34,8 +35,86 @@
 #' total (benign + mutated) read counts, \code{Xb}, a matrix of bulk total
 #' (benign + mutated) read counts, \code{alpha}, the mutation-specific gene
 #' activation rates, \code{beta}, the mutation-specific gene deactivation rates,
-#' and \code{G}, an \eqn{M} (mutation) x \eqn{N} (cell) matrix of single-cell gene
+#' and \code{G}, a \eqn{M} (mutation) x \eqn{N} (cell) matrix of single-cell gene
 #' expression data.
+#'
+#' @details
+#' The below is a modified excerpt from the Canopy2 manuscript text.
+#'
+#' To generate the sample-to-clone assignment matrix, \code{Pb}, each column
+#' corresponding to sample \eqn{t} was sampled from a symmetric Dirichlet
+#' distribution as
+#'
+#' \deqn{p^{b}_t \sim \text{Dirichlet}\Big(\frac{1}{K},...,\frac{1}{K}\Big),}
+#'
+#' which results in a vector of length equal to the number of subclones, \eqn{K}.
+#' The final \code{Pb} is of dimension \eqn{K \text{ subclones} \times T \text { bulk samples}}
+#' with columnwise sums equal to 1.
+#'
+#' Likewise, to generate the cell-to-clone assignment matrix, \code{Ps}, each
+#' column corresponding to cell \eqn{n} was sampled from a multinomial
+#' distribution as
+#'
+#' \deqn{p^{s}_n \sim \text{Multinomial}\Big(1,\Big(\frac{1}{K},...,\frac{1}{K}\Big)\Big),}
+#'
+#' which corresponds to a multinomial distribution with 1 trial (equivalent to
+#' the categorical distribution) and a vector of identical probabilities of
+#' length equal to the number of subclones, \eqn{K}. The final \code{Ps} is
+#' of dimension \eqn{K \text{ subclones} \times N \text{ single cells}} with
+#' columnwise sums equal to 1.
+#'
+#' For mutation \eqn{m} and bulk sample \eqn{t}, each of the alternative
+#' read counts for the bulk samples, \eqn{r_{mt}^b}, are distributed as
+#' \deqn{r^{b}_{mt}|x_{mt}^b, \boldsymbol{z_{m}}, \boldsymbol{p_{t}^b} \sim
+#' \text{Binom}(x^{b}_{mt},\frac{1}{2}q_{mt}^b)}
+#' with probability mass function
+#' \deqn{p(r^{b}_{mt}|x_{mt}^b, \boldsymbol{z_{m}}, \boldsymbol{p_{t}^b}) =
+#' {x_{mt}^b \choose r_{mt}^b}\left(\frac{1}{2}q_{mt}^{b}\right)^{r_{mt}^b}
+#' \left(1-\frac{1}{2}q_{mt}^{b}\right)^{(x_{mt}^b-r_{mt}^b)},}
+#'
+#' where \eqn{x_{mt}^b} denotes the total bulk read counts from which \eqn{r_{mt}^b}
+#' was derived for \eqn{x_{mt}^b \sim \text{Unif}(\code{b.mindepth},
+#' \code{b.maxdepth})}, and \eqn{q_{mt}^{b}=\boldsymbol{z_{m}}\boldsymbol{p_{t}^{b}}'
+#' \in \boldsymbol{Q^b}_{M\times T}} indicates the fraction of cells in bulk
+#' sample \eqn{t} that contain somatic variant \eqn{m} for transposed
+#' \eqn{\boldsymbol{p_{t}^{b}}}. These probabilities are multiplied by 1/2 since
+#'  all mutations are assumed heterozygous in copy-number neutral regions.
+#'
+#' Similarly, for each single cell \eqn{n}, the alternative read counts,
+#' \eqn{r^{s}_{mn}} are distributed as
+#'
+#' \deqn{
+#' r^{s}_{mn}|x_{mn}^s,\boldsymbol{z_{m}},\boldsymbol{p_{n}^s}, \gamma_{m},\epsilon \sim
+#'\begin{cases}
+#' \text{BetaBinom}(x_{mn}^s,\alpha_{m},\beta_{m}) & \text{if } q_{mn}^s = 1\\
+#' \text{BetaBinom}(x_{mn}^s,\kappa,\tau) & \text{if } q_{mn}^s = 0
+#' \end{cases},
+#' }
+#'
+#' where \eqn{x_{mn}^s} denotes the total single-cell read counts from which
+#' \eqn{r_{mn}^s} was derived for \eqn{x_{mn}^s \sim \text{Unif}(\code{s.mindepth},
+#' \code{s.maxdepth})}, \eqn{\gamma_{m} \sim \text{Beta}(\alpha_{m},\beta_{m})},
+#' and \eqn{\epsilon \sim \text{Beta}(\kappa,\tau)}. Marginalization over the
+#' hyperparameters \eqn{\gamma_m} and \eqn{\epsilon} leads to the piecewise
+#' beta-binomial given above and its corresponding probability mass function
+#'
+#'\deqn{
+#' p(r^{s}_{mn}|x_{mn}^s,q_{mn}^s, \alpha_m, \beta_m, \kappa, \tau)
+#' = {x_{mn}^s \choose r_{mn}^s}\left(\frac{\text{B}(r_{mn}^s+\alpha_m,
+#' x_{mn}^s-r_{mn}^s+\beta_m)}{\text{B}(\alpha_m,\beta_m)}\right)^{(q_{mn}^s)}
+#' \left(\frac{\text{B}(r_{mn}^s+\kappa, x_{mn}^s-r_{mn}^s+\tau)}
+#' {\text{B}(\kappa,\tau)}\right)^{(1-q_{mn}^s)},
+#' }
+#' where \eqn{\text{B}(x,y) = \frac{\Gamma{(x)}\Gamma{(y)}}{\Gamma{(x+y)}}}
+#' denotes the beta function.
+#'
+#' In the above, \eqn{q_{mn}^{s}=\boldsymbol{z_{m}}
+#' \boldsymbol{p_{n}^{s}}' \in \boldsymbol{Q^s}_{M \times N}} is a binary value
+#' indicating whether cell \eqn{n} contains somatic variant \eqn{m} for
+#' transposed \eqn{\boldsymbol{p_{n}^{s}}}.
+#'
+#' The densities for the gene expression data are defined elsewhere in
+#' \code{\link[canopy2]{rBetaPois}}.
 #'
 #' @examples
 #' # Simulate read counts
@@ -59,6 +138,7 @@
 #'
 #' best.tree.out
 #'
+#' @import mathjaxr
 #' @export
 
 simulate_data<-function(N, S, M, alpha, beta, kappa=1, tau=999, Ktrue,

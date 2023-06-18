@@ -13,6 +13,20 @@
 #' @param outpath a string specifying the location at which to save output
 #' generated from \code{get_diagnostics}.
 #'
+#' @details
+#' Diagnostic plots are helpful for determining if there is evidence of
+#' convergence within the MCMC chains and also to assess agreement of these
+#' plots with the tree selected as opitmal from \code{\link[canopy2]{get_best_tree}}.
+#'
+#' The posterior densities from the individual chains should ideally sit close
+#' in space and each of the chains in the trace plots should be indistinguishable
+#' except for random noise. The lag autocorrelation factor (lag ACF) should drop
+#' to zero rather rapidly; large spikes that persist after lag 5 or 10 can be
+#' indicative of strong within chain correlation (autocorrelation). A large
+#' autocorrelation can imply that the sampling space is not properly explored
+#' and can result in convergence to a local (rather than global) optimum or
+#' convergence failure, altogether.
+#'
 #' @return
 #' For each K, generates graphical displays of the posterior densities, trace,
 #' and lag ACF. These graphs can be viewed in R or exported to pdfs.
@@ -32,11 +46,6 @@
 #'
 #' # Examine diagnostic plots
 #' get_diagnostics(get.trees.out, project=NULL, outpath=NULL)
-#'
-#' # Get best tree across all chains and subclones via DIC
-#' best.tree.out<-get_best_tree(get.trees.out)
-#'
-#' best.tree.out
 #'
 #' @export
 

@@ -57,4 +57,5 @@ are.out<-are_fun(true.tree=sims.out$true.tree, inferred.tree=best.tree.out$tree)
 
 # Print absolute reconstruction error for each component
 are.out$are.Z; are.out$are.Ps; are.out$are.Pb
+
 }

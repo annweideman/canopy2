@@ -59,7 +59,7 @@ For example, if \code{thin=10} then every 10th iteration is stored. Defaults
 to 10.}
 
 \item{pburn}{a decimal denoting the percentage of burn-in to store. Defaults
-to 0.10 (10\%).}
+to 0.10 (10\\%).}
 
 \item{seed}{a state (positive integer) to set the random number generation.
 Defaults to 8675309.}
@@ -80,7 +80,7 @@ burn-in to remove.
 }
 \description{
 Produce a list of phylogenetic trees in a sample space of size
-number of chains x number of subclones. Sampling is performed using
+(number of chains) x (number of subclones). Sampling is performed using
 Metropolis-within-Gibbs. Output is of class \code{get_trees}.
 }
 \examples{
@@ -103,4 +103,5 @@ get_diagnostics(get.trees.out, project=NULL, outpath=NULL)
 best.tree.out<-get_best_tree(get.trees.out)
 
 best.tree.out
+
 }

@@ -84,4 +84,5 @@ tree$Post<-getPost(tree, Rb=sims.out$Rb, Xb=sims.out$Xb, Rs=sims.out$Rs, Xs=sims
                    alpha=sims.out$alpha, beta=sims.out$beta, kappa=1, tau=999)
 
 tree$Post
+
 }

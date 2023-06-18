@@ -2,30 +2,41 @@
 % Please edit documentation in R/rBetaPois.R
 \name{rBetaPois}
 \alias{rBetaPois}
-\title{Generate random variates from a beta-Poisson distribution}
+\title{The Beta-Poisson Distribution}
 \usage{
 rBetaPois(n, alpha, beta, scale = 1)
 }
 \arguments{
-\item{n}{The number of random values to return}
+\item{n}{the number of random values to return}
 
-\item{alpha}{A positive value, the alpha shape parameter of the beta distribution
+\item{alpha}{a positive value, the alpha shape parameter of the beta distribution
+estimated by using \code{get_burstiness_bpsc},
+\code{get_burstiness_scale}, or other method of the user's choosing}
+
+\item{beta}{a positive value, the beta shape parameter of the beta distribution
 estimated by using \code{get_burstiness_bpsc},
 \code{get_burstiness_scale}, or other method of the user's choosing.}
 
-\item{beta}{A positive value, the beta shape parameter of the beta distribution
+\item{scale}{a positive value, the scaling parameter for the beta distribution
 estimated by using \code{get_burstiness_bpsc},
-\code{get_burstiness_scale}, or other method of the user's choosing.}
-
-\item{scale}{A positive value, the scaling parameter for the beta distribution
-estimated by using \code{get_burstiness_bpsc},
-\code{get_burstiness_scale}, or other method of the user's choosing.}
+\code{get_burstiness_scale}, or other method of the user's choosing}
 }
 \value{
-A vector of the random variates
+a vector of the random variates from the beta-Poisson distribution
 }
 \description{
-Generate random variates from a beta-Poisson distribution
+This function is used to generate random variants for the beta-Poisson
+distribution. The beta distribution is modified to have a support of
+[0, \code{scale}] instead of the typical [0, 1], and \code{alpha} and
+\code{beta} represent the shape parameters.
+}
+\details{
+Each of the beta-Poisson random variates, \eqn{r}, are generated as
+
+\deqn{r \sim Pois(\lambda),}
+
+where \eqn{\lambda \sim c*Beta(\alpha,\beta)} for \eqn{c=}\code{scale},
+\eqn{\alpha}=\code{alpha}, and \eqn{\beta}=\code{beta}.
 }
 \examples{
 set.seed(8675309)
