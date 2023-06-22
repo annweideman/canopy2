@@ -2,14 +2,16 @@
 #'
 #' Compute the natural log-transformed beta-binomial density.
 #'
-#' @param r a numeric vector or matrix of non-negative integers representing the
-#' sampled counts.
-#' @param x a numeric vector or matrix of non-negative integers representing the
-#' total number of counts or trials.
+#' @param r a matrix of non-negative integers representing the alternative read
+#' counts.
+#' @param x a matrix of non-negative integers representing the total number of
+#' read counts
 #' @param shape1 a non-negative numeric vector corresponding to the \eqn{\alpha}
-#' shape parameter in the beta-binomial distribution.
+#' shape parameter in the beta-binomial distribution. Must have length equal
+#' to the number of rows (number of mutations) in \code{r}.
 #' @param shape2 a non-negative numeric vector corresponding to the \eqn{\beta}
-#' shape parameter in the beta-binomial distribution.
+#' shape parameter in the beta-binomial distribution. Must have length equal to
+#' the number of rows (number of mutations) in \code{r}.
 #'
 #' @return
 #' A numeric representing the log beta-binomial density.
@@ -37,10 +39,37 @@
 #'
 #' # Compute log beta-binomial density
 #' logdBetaBinom(sims.out$Rs, sims.out$Xs, sims.out$alpha, sims.out$beta)
-#'
-#' @export
 
 logdBetaBinom=function(r, x, shape1, shape2){
+
+  # Check arguments
+  if (!inherits(r, "matrix")){
+    stop("r must be of class \"matrix\"")
+  }
+  if(!all(r==round(r)) | !is.numeric(r) | !all(r>=0)){
+    stop("r must contain positive integers")
+  }
+  if (!inherits(x, "matrix")){
+    stop("x must be of class \"matrix\"")
+  }
+  if(!all(x==round(x)) | !is.numeric(x) | !all(x>=0)){
+    stop("x must contain positive integers")
+  }
+  if(!is.numeric(shape1) | !all(shape1>=0)){
+    stop("shape1 must contain non-negative values")
+  }
+  if(length(shape1)!=nrow(r)){
+    stop("shape1 must have length equal to the number of rows in r")
+  }
+  if(!is.numeric(shape2) | !all(shape2>=0)){
+    stop("shape2 must contain non-negative values")
+  }
+  if(length(shape2)!=nrow(r)){
+    stop("shape2 must have length equal to the number of rows in r")
+  }
+
+  # Compute density
   lchoose(x,r)+lbeta(r+shape1, x-r+shape2)-lbeta(shape1, shape2)
+
 }
 

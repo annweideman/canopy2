@@ -27,6 +27,19 @@
 
 getZ <- function(tree) {
 
+  if (!inherits(tree, "phylo")){
+    stop("tree must be of class \"phylo\"")
+  }
+  if (is.null(tree$snv)){
+    stop("tree must contains point mutations (SNVs) under slot tree$snv")
+  }
+  if (is.null(tree$Z)){
+    stop("tree must contain clonal configuration matrix, Z, under slot tree$Z")
+  }
+  if (is.null(tree$Ps)){
+    stop("tree must contain cell-to-clone assignment matrix, Ps, under slot tree$Ps")
+  }
+
   K <- (nrow(tree$edge) + 2)/2 #Number of clones
   M <- nrow(tree$snv) #Number of mutations
 

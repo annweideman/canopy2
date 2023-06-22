@@ -60,6 +60,20 @@
 #' @export
 
 plot_Z <- function(tree) {
+
+  if (!inherits(tree, "phylo")){
+    stop("tree must be of class \"phylo\"")
+  }
+  if (is.null(tree$snv)){
+    stop("tree must contains point mutations (SNVs) under slot tree$snv")
+  }
+  if (is.null(tree$Z)){
+    stop("tree must contain clonal configuration matrix, Z, under slot tree$Z")
+  }
+  if (is.null(tree$Ps)){
+    stop("tree must contain cell-to-clone assignment matrix, Ps, under slot tree$Ps")
+  }
+
   node_total <- max(tree$edge)
   node_shown <- ncol(tree$Z)
   node_hidden <- node_total - node_shown
@@ -76,7 +90,8 @@ plot_Z <- function(tree) {
   # alternate binding of vectors
   trunk_ids<-(node_shown+1):node_total
   stem_ids<-1:node_shown
-  alt_inds<-c(trunk_ids, stem_ids)[order(c(seq_along(trunk_ids)*2 - 1, seq_along(stem_ids)*2))]
+  alt_inds<-c(trunk_ids, stem_ids)[order(c(seq_along(trunk_ids)*2 - 1,
+                                           seq_along(stem_ids)*2))]
 
   for (i in alt_inds) {
     mut_num <- sum(tree$snv[, 3] == i)

@@ -30,24 +30,36 @@
 
 get_gene_expression <- function(featurecounts, build=37){
 
-# Map Ensembl IDs to gene symbols
-ensembl <- biomaRt::useEnsembl(biomart="ensembl",
-                               dataset="hsapiens_gene_ensembl",
-                               GRCh=build)
-gene.names <- rownames(featurecounts)
-bm.out <- biomaRt::getBM(filters= "ensembl_gene_id",
-                         attributes= c("ensembl_gene_id","hgnc_symbol"),
-                         values=gene.names, mart=ensembl)
+  # check arguments
+  if (!inherits(featurecounts, "matrix")){
+    stop("featurecounts must be of class \"matrix\"")
+  }
+  if(!all(featurecounts==round(featurecounts)) | !is.numeric(featurecounts) |
+     !all(featurecounts>=0)){
+    stop("featurecounts must contain positive integers")
+  }
+  if (!all(build > 0) | !is.numeric(build)){
+    stop("build must be a positive integer")
+  }
 
-# Remove any duplicates for Ensembl ID
-# Note: Ensembl arbitrarily picks a HGNC synonym for the summary if repeat
-# Ensembl IDs
-bm.out <- bm.out[!duplicated(bm.out$ensembl_gene_id), ]
-rownames(bm.out) <- bm.out$ensembl_gene_id
+  # Map Ensembl IDs to gene symbols
+  ensembl <- biomaRt::useEnsembl(biomart="ensembl",
+                                 dataset="hsapiens_gene_ensembl",
+                                 GRCh=build)
+  gene.names <- rownames(featurecounts)
+  bm.out <- biomaRt::getBM(filters= "ensembl_gene_id",
+                           attributes= c("ensembl_gene_id","hgnc_symbol"),
+                           values=gene.names, mart=ensembl)
 
-# Merge with gene expression data
-featurecounts <- merge(bm.out,featurecounts,by="row.names",all=T)[,-1]
+  # Remove any duplicates for Ensembl ID
+  # Note: Ensembl arbitrarily picks a HGNC synonym for the summary if repeat
+  # Ensembl IDs
+  bm.out <- bm.out[!duplicated(bm.out$ensembl_gene_id), ]
+  rownames(bm.out) <- bm.out$ensembl_gene_id
 
-featurecounts
+  # Merge with gene expression data
+  featurecounts <- merge(bm.out,featurecounts,by="row.names",all=T)[,-1]
+
+  featurecounts
 
 }

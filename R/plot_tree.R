@@ -6,6 +6,18 @@
 #'
 #' @param tree an object of class \code{pyhlo} representing the phylogenetic
 #' tree.
+#' @param save.muts a logical indicating whether a text file containing all
+#' mutations along the branches should be saved. If \code{TRUE}, must specify
+#' \code{project} and \code{outpath}. Defaults to \code{FALSE}.
+#' @param save.plot a logical indicating whether a plot of the best tree should be
+#' saved. If \code{TRUE}, must specify \code{project} and \code{outpath}.
+#' Defaults to \code{FALSE}.
+#' @param project a string specifying the project name to add to the filename
+#' for output generated from \code{save.muts} and \code{save.plot}. The final
+#' filenames for \code{save.muts} and \code{save.plot} will be "[projectname]_muts.txt"
+#' and "[projectname]_plot_tree.jpg," respectively.
+#' @param outpath a string specifying the location at which to save output
+#' generated from \code{save.muts} and \code{save.plot}.
 #'
 #' @return
 #' Automatically plots the tree to the graphics device and outputs a matrix
@@ -73,8 +85,57 @@
 #'
 #' @export
 
-plot_tree <- function(tree, annovar=NULL, save.muts=F, save.plot=F,
-                      outpath=NULL, filename=NULL,...){
+plot_tree <- function(tree, save.muts=F, save.plot=F,
+                      outpath=NULL, project=NULL,...){
+
+  if (!inherits(tree, "phylo")){
+    stop("tree must be of class \"phylo\"")
+  }
+  if (is.null(tree$snv)){
+    stop("tree must contain point mutations (SNVs) under slot tree$snv")
+  }
+  if (is.null(tree$Z)){
+    stop("tree must contain clonal configuration matrix, Z, under slot tree$Z")
+  }
+  if (is.null(tree$Ps)){
+    stop("tree must contain cell-to-clone assignment matrix, Ps, under slot tree$Ps")
+  }
+  if (is.null(tree$Pb)){
+    stop("tree must contain sample-to-clone assignment matrix, Pb, under slot tree$Pb")
+  }
+  if(!is.logical(save.muts)){
+    stop("Argument save.muts must be a logical (TRUE or FALSE).")
+  }
+  if(!is.logical(save.plot)){
+    stop("Argument save.plot must be a logical (TRUE or FALSE).")
+  }
+  if(is.null(project) & (save.muts | save.plot)){
+    stop("You must specify a project name in order to save the output.")
+  }
+  if(!is.null(project) & !is.character(project)){
+    stop("Argument project must be of type string.")
+  }
+  if(!is.null(outpath) & is.null(project)){
+    stop("Argument project must be specified if argument outpath is specified.")
+  }
+  if(is.null(outpath) & !is.null(project)){
+    stop("Argument outpath must be specified if argument project is specified.")
+  }
+  if(!is.null(outpath) & !(save.muts | save.plot)){
+    stop("You must set save.muts and/or save.plot to 'TRUE' so
+         that the output can be directed to the location specified by \"outpath\".")
+  }
+  if(is.null(outpath) & (save.muts | save.plot)){
+    stop("You must specify an outpath in order to save the output.")
+  }
+  if(!is.null(outpath) & !is.character(outpath)){
+    stop("The outpath argument must be of type string.")
+  }
+  if(!is.null(outpath)){
+    if(!file.exists(outpath)){
+      stop("The location specified for outpath is not valid.")
+    }
+  }
 
   snvedge <- rep(NA, nrow(tree$snv))
   for (k in 1:nrow(tree$snv)) {
@@ -84,10 +145,7 @@ plot_tree <- function(tree, annovar=NULL, save.muts=F, save.plot=F,
 
   edge.label <- sort(unique(snvedge))
   mut.branch.mat=matrix(nrow=length(edge.label),ncol=1)
-
-  if(is.null(annovar)){snv.name=rownames(tree$Z)
-  }else{
-    snv.name=rownames(Rs)}
+  snv.name=rownames(tree$Z)
 
   # Generate list of mutation clusters
   for (i in 1:length(edge.label)) {

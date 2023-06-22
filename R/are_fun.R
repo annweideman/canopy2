@@ -57,9 +57,32 @@ are_fun <- function(true.tree, inferred.tree){
   if (!inherits(true.tree, "phylo")){
     stop("true.tree must be of class \"phylo\"")
   }
-
   if (!inherits(inferred.tree, "phylo")){
     stop("inferred.tree must be of class \"phylo\"")
+  }
+  if (is.null(true.tree$Z)){
+    stop("true.tree must contain clonal configuration matrix, Z, under
+         slot true.tree$Z")
+  }
+  if (is.null(true.tree$Ps)){
+    stop("true.tree must contain cell-to-clone assignment matrix, Ps, under
+         slot true.tree$Ps")
+  }
+  if (is.null(true.tree$Pb)){
+    stop("true.tree must contain sample-to-clone assignment matrix, Pb, under
+         slot true.tree$Pb")
+  }
+  if (is.null(inferred.tree$Z)){
+    stop("inferred.tree must contain clonal configuration matrix, Z, under
+         slot inferred.tree$Z")
+  }
+  if (is.null(inferred.tree$Ps)){
+    stop("inferred.tree must contain cell-to-clone assignment matrix, Ps, under
+         slot inferred.tree$Ps")
+  }
+  if (is.null(inferred.tree$Pb)){
+    stop("inferred.tree must contain sample-to-clone assignment matrix, Pb, under
+         slot inferred.tree$Pb")
   }
 
   N<-ncol(inferred.tree$Ps)

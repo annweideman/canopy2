@@ -6,17 +6,32 @@
 \usage{
 plot_tree(
   tree,
-  annovar = NULL,
   save.muts = F,
   save.plot = F,
   outpath = NULL,
-  filename = NULL,
+  project = NULL,
   ...
 )
 }
 \arguments{
 \item{tree}{an object of class \code{pyhlo} representing the phylogenetic
 tree.}
+
+\item{save.muts}{a logical indicating whether a text file containing all
+mutations along the branches should be saved. If \code{TRUE}, must specify
+\code{project} and \code{outpath}. Defaults to \code{FALSE}.}
+
+\item{save.plot}{a logical indicating whether a plot of the best tree should be
+saved. If \code{TRUE}, must specify \code{project} and \code{outpath}.
+Defaults to \code{FALSE}.}
+
+\item{outpath}{a string specifying the location at which to save output
+generated from \code{save.muts} and \code{save.plot}.}
+
+\item{project}{a string specifying the project name to add to the filename
+for output generated from \code{save.muts} and \code{save.plot}. The final
+filenames for \code{save.muts} and \code{save.plot} will be "\link{projectname}_muts.txt"
+and "\link{projectname}_plot_tree.jpg," respectively.}
 }
 \value{
 Automatically plots the tree to the graphics device and outputs a matrix

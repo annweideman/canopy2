@@ -7,17 +7,19 @@
 logdBetaBinom(r, x, shape1, shape2)
 }
 \arguments{
-\item{r}{a numeric vector or matrix of non-negative integers representing the
-sampled counts.}
+\item{r}{a matrix of non-negative integers representing the alternative read
+counts.}
 
-\item{x}{a numeric vector or matrix of non-negative integers representing the
-total number of counts or trials.}
+\item{x}{a matrix of non-negative integers representing the total number of
+read counts}
 
 \item{shape1}{a non-negative numeric vector corresponding to the \eqn{\alpha}
-shape parameter in the beta-binomial distribution.}
+shape parameter in the beta-binomial distribution. Must have length equal
+to the number of rows (number of mutations) in \code{r}.}
 
 \item{shape2}{a non-negative numeric vector corresponding to the \eqn{\beta}
-shape parameter in the beta-binomial distribution.}
+shape parameter in the beta-binomial distribution. Must have length equal to
+the number of rows (number of mutations) in \code{r}.}
 }
 \value{
 A numeric representing the log beta-binomial density.
@@ -48,5 +50,4 @@ sims.out<-simulate_data(N=15, S=2, M=5, alpha=0.1, beta=1.0, kappa=1, tau=999,
 
 # Compute log beta-binomial density
 logdBetaBinom(sims.out$Rs, sims.out$Xs, sims.out$alpha, sims.out$beta)
-
 }

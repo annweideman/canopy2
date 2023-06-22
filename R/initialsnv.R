@@ -27,6 +27,13 @@
 
 initialsnv <- function (tree, snv.name) {
 
+  if (!inherits(tree, "phylo")){
+    stop("tree must be of class \"phylo\"")
+  }
+  if (!is.character(snv.name)){
+    stop("snv.name must be of class \"character\"")
+  }
+
   # Number of point mutations
   snv.no <- length(snv.name)
   # If tree has more than two edges, then randomly place SNVs along these edges

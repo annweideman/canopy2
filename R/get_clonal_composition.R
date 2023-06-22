@@ -39,6 +39,14 @@
 #' @export
 
 get_clonal_composition = function(tree) {
+
+  if (!inherits(tree, "phylo")){
+    stop("tree must be of class \"phylo\"")
+  }
+  if (is.null(tree$snv)){
+    stop("tree must contain point mutations (SNVs) under slot tree$snv")
+  }
+
   snaname = rownames(tree$snv)
   n = (nrow(tree$edge) + 2)/2
   clonal.muts = vector("list", n)

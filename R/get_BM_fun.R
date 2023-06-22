@@ -17,13 +17,21 @@
 #' data("GBM10_postproc")
 #'
 #' # Map chromosome positions to gene IDs
-#' Rs<-getBM_fun(Rs)
+#' Rs<-get_BM_fun(GBM10_postproc@Rs)
 #'
 #' head(Rs)
 #'
 #' @export
 
 get_BM_fun<-function(reads){
+
+  # check arguments
+  if (!inherits(reads, "matrix")){
+    stop("reads must be of class \"matrix\"")
+  }
+  if(!all(reads==round(reads)) | !is.numeric(reads) | !all(reads>=0)){
+    stop("reads must contain positive integers")
+  }
 
 ensembl<-biomaRt::useEnsembl(biomart="ensembl",
                              dataset="hsapiens_gene_ensembl",
