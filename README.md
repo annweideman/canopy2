@@ -15,9 +15,9 @@ An R package that uses Bayesian and computational methods to infer the tumor phy
 The distinguishing features of Canopy2 when compared to available methods, including predecessor Canopy, are: 1) joint inference using single nucleotide variants derived from bulk DNA WES and scRNA-seq, 2) separation of zeros categorized as non-cancerous (cells without mutations), stochastic (mutations not expressed due to bursting), and technical (expressed mutations not picked up by sequencing), and 3) a three-tier output used to comprehensively examine the tumor evolutionary history and intratumor heterogeneity. The output allows one to infer the cell-of-origin (cancer initiating cell), temporal order of the point mutations, the mutational profiles of the single-cells, and the composition of the bulk samples that comprise these single-cells. 
 
 **Inputs:**
-  * `Rs`:   $M \times N$ (mutation by single-cell) matrix of alternative read counts from single-cell RNA sequencing data. We provide details for a pre-processing pipeline for somatic variant calling in the paper; the scripts for this pipeline can be accessed in our Zenodo repository [include Zenodo link here].
+  * `Rs`:   $M \times N$ (mutation by single-cell) matrix of alternative read counts from single-cell RNA sequencing data. We provide details for a pre-processing pipeline for somatic variant calling in the paper; the scripts for this pipeline can be accessed in our Zenodo repository (https://zenodo.org/record/7931384).
   * `Xs`:  $M \times N$ (mutation by single-cell) matrix of total read counts (benign + mutated) from single-cell RNA sequencing data.
-  *  `Rb`:  $M \times T$ (mutation by bulk sample) matrix Alternative read counts from bulk DNA whole exome sequencing (WES). We provide details for a pre-processing pipeline for somatic variant calling in the paper; the scripts for this pipeline can be accessed in our Zenodo repository [include Zenodo link here].
+  *  `Rb`:  $M \times T$ (mutation by bulk sample) matrix Alternative read counts from bulk DNA whole exome sequencing (WES). We provide details for a pre-processing pipeline for somatic variant calling in the paper; the scripts for this pipeline can be accessed in our Zenodo repository (https://zenodo.org/record/7931384).
   *  `Xb`: Total read counts (benign + mutated) from bulk DNA whole exome sequencing (WES).
   *  `alpha` and `beta`:  $1 \times M$ (number of mutations) vectors of mutation specific gene activation ($\alpha$) and gene deactivation ($\beta$) rates. These can be estimated using either the BPSC methodology in function `get_burstiness_bpsc()` (recommended) or the SCALE methodology with function `get_burstiness_scale()`.
   *  `kappa` and `tau`:   $1 \times 1$ scalars used to compute the sequencing error by $\frac{\kappa}{\kappa + \tau}$. The average error rate of next-generation sequencing is reported to be 0.1\% per nucleotide, so these parameters have been set to default values of $\kappa=1$ and $\tau = 999$ such that $\frac{\kappa}{\kappa + \tau} = 0.001$ (or 0.1\%). 
@@ -29,7 +29,7 @@ The distinguishing features of Canopy2 when compared to available methods, inclu
 * `Pb`: $K \times T$ sample-to-clone assignment matrix, which indicates what percentage of each bulk sample consists of each clone
 
 # Installation
-Install the current release from CRAN (not recommended). Not published on CRAN as of 5/9/23.
+Install the current release from CRAN (not recommended). Not published on CRAN as of 6/24/23.
 
 ```
 install.packages("canopy2")
