@@ -38,8 +38,12 @@ install.packages("canopy2")
 Install the devel version from GitHub (HIGHLY recommended, as this will allow you to install any corrected bugs post-publication to CRAN)
 
 ```
-install.packages(c("ape", "bayesplot", "biomaRt", "BPSC", "coda", "DirichletReg", "ggh4x", "ggplot2", "ggplotify", "ggpubr", "ggthemes",
-"ggtree", "gridExtra", "gtools", "Rdpack", "SCALE", "viridis"))
+# Dependencies
+list.of.packages<-c("ape", "bayesplot", "biomaRt", "BPSC", "coda", "DirichletReg", "ggh4x", "ggplot2", "ggplotify", "ggpubr", "ggthemes",
+"ggtree", "gridExtra", "gtools", "Rdpack", "SCALE", "viridis")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+
 devtools::install_github("annweideman/canopy2/package")
 ```
 
