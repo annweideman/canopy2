@@ -10,7 +10,7 @@ get_gene_expression(featurecounts, build = 37)
 \item{featurecounts}{a gene x sample matrix of pre-processed read counts from
 gene expression data.}
 
-\item{a}{positive integer corresponding to the Genome Reference Consortium
+\item{build}{a positive integer corresponding to the Genome Reference Consortium
 Human (GRCh) build. This is passed to the biomaRt::useEnsembl() function which can
 currently only take build 37 (as of June 11, 2023).}
 }

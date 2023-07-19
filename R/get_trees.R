@@ -5,9 +5,9 @@
 #' Metropolis-within-Gibbs. Output is of class \code{get_trees}.
 #'
 #' @param Rs \eqn{M} (mutations) x \eqn{N} (cells) matrix of single-cell
-#' alternative read counts. Rownames must match those of argument \code{Rb}.
+#' alternative read counts. Rownames must match those of argument \code{Rb}
 #' @param Rb \eqn{M} (mutations) x \eqn{S} (bulk samples) matrix of bulk
-#' alternative read counts. Rownames must match those of argument \code{Rs}.
+#' alternative read counts. Rownames must match those of argument \code{Rs}
 #' @param Xs \eqn{M} (mutations) x \eqn{N} (cells) matrix of single-cell
 #' total (benign + mutated) read counts. Rownames must match those of argument
 #' \code{Xb}.
@@ -15,13 +15,13 @@
 #' (benign + mutated) read counts. Rownames must match those of argument
 #' \code{Xs}.
 #' @param alpha numeric vector of positive values with length \eqn{M}
-#' (number of mutations) representing the gene activation rates.
+#' (number of mutations) representing the gene activation rates
 #' @param beta numeric vector of positive values with length \eqn{M}
-#' (number of mutations) representing the gene deactivation rates.
+#' (number of mutations) representing the gene deactivation rates
 #' @param kappa a positive value used in the computation of the
-#' sequencing error defined as \eqn{\kappa/(\kappa+\tau)}.
+#' sequencing error defined as \eqn{\kappa/(\kappa+\tau)}
 #' @param tau a positive value used in the computation of the sequencing error
-#' defined as \eqn{\kappa/(\kappa+\tau)}.
+#' defined as \eqn{\kappa/(\kappa+\tau)}
 #' @param Klist numeric vector containing the possible numbers of subclones.
 #' @param niter number of iterations of MCMC. Defaults to 10000.
 #' @param nchains number of chains for MCMC. Defaults to 20.
@@ -29,7 +29,7 @@
 #'  For example, if \code{thin=10} then every 10th iteration is stored. Defaults
 #'  to 10.
 #' @param pburn a decimal denoting the percentage of burn-in to store. Defaults
-#' to 0.10 (10\%).
+#' to 0.10 (10\\%).
 #' @param seed a state (positive integer) to set the random number generation.
 #' Defaults to 8675309.
 #'
@@ -71,7 +71,8 @@
 #' @export
 
 get_trees<-function(Rs, Rb, Xs, Xb, alpha, beta, kappa, tau,
-                    Klist, niter=10000, nchains=20, thin=10, pburn=0.1, seed=8675309){
+                    Klist, niter=10000, nchains=20, thin=10, pburn=0.1,
+                    seed=8675309){
 
   # check arguments
   if (!inherits(Rs, "matrix")){
@@ -331,7 +332,7 @@ get_trees<-function(Rs, Rb, Xs, Xb, alpha, beta, kappa, tau,
       # Print message to console
       print(paste("Running chain",chain, "out of", nchains,"..."))
 
-      tree<-initialize(seedling=chain)
+      tree<-initialize(seedling=(chain+seed))
       tree.list<-list()
 
       for(iter in 1:niter){

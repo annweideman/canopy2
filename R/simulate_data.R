@@ -1,7 +1,7 @@
 #' Simulate data for Canopy2
 #'
-#' Simulates read counts, parameters for sequencing error, and gene expression
-#' data for testing \code{Canopy2}.
+#' Simulates phylogenetic tree, read counts, and gene expression data for
+#' testing \code{Canopy2}.
 #'
 #' @param N number of single cells
 #' @param S number of bulk samples
@@ -33,10 +33,8 @@
 #' \code{Rs}, a matrix of single-cell alternative read counts, \code{Rb}, a
 #' matrix of bulk alternative read counts, \code{Xs}, a matrix of single-cell
 #' total (benign + mutated) read counts, \code{Xb}, a matrix of bulk total
-#' (benign + mutated) read counts, \code{alpha}, the mutation-specific gene
-#' activation rates, \code{beta}, the mutation-specific gene deactivation rates,
-#' and \code{G}, a \eqn{M} (mutation) x \eqn{N} (cell) matrix of single-cell gene
-#' expression data.
+#' (benign + mutated) read counts, and \code{G}, a \eqn{M} (mutation) x \eqn{N}
+#' (cell) matrix of single-cell gene expression data.
 #'
 #' @details
 #' The below is a modified excerpt from the Canopy2 manuscript text.
@@ -122,13 +120,18 @@
 #'                        Ktrue=4, b.mindepth=30, b.maxdepth=50, sc.mindepth=80,
 #'                        sc.maxdepth=120, scale=300, seed=8675309)
 #'
+#' # Estimate parameters for gene kinetics using the BPSC methodology
+#' # Note: can also use get_burstiness_scale() for large datasets
+#' param.out<-get_burstiness_bpsc(counts=sims.out$G)
+#'
 #' # Run Canopy2 to get list of phylogenetic trees corresponding to all chains
 #' # and all subclones
 #' get.trees.out<-get_trees(Rs=sims.out$Rs, Rb=sims.out$Rb,
-#'                         Xs=sims.out$Xs, Xb=sims.out$Xb,
-#'                         alpha=sims.out$alpha, beta=sims.out$beta,
-#'                         kappa=1, tau=999, Klist=3:5,
-#'                         niter=5000, nchains=3, thin=10, pburn=0.1, seed=8675309)
+#'                          Xs=sims.out$Xs, Xb=sims.out$Xb,
+#'                          alpha=param.out$alpha, beta=param.out$beta,
+#'                          kappa=1, tau=999, Klist=3:5,
+#'                          niter=5000, nchains=3, thin=10, pburn=0.1,
+#'                          seed=8675309)
 #'
 #' # Examine diagnostic plots
 #' get_diagnostics(get.trees.out, project=NULL, outpath=NULL)
@@ -348,6 +351,6 @@ simulate_data<-function(N, S, M, alpha, beta, kappa=1, tau=999, Ktrue,
   rownames(G) <- paste0("snv", 1:nrow(G))
   colnames(G) <- paste0("cell", 1:ncol(G))
 
-  return(list(true.tree=tree, Rs=Rs, Rb=Rb, Xs=Xs, Xb=Xb, alpha=alpha, beta=beta, G=G))
+  return(list(true.tree=tree, Rs=Rs, Rb=Rb, Xs=Xs, Xb=Xb, G=G))
 
 }

@@ -17,7 +17,7 @@ corresponds to the normal subclone.
 \description{
 Returns the single nucleotide variants (SNVs) belonging to each subclone.
 This function adapts the \code{getclonalcomposition} function from
-\insertCite{Jiang2017}{Canopy2} by removing any portions of the code related
+\insertCite{Jiang2017}{canopy2} by removing any portions of the code related
 to copy number alterations (CNAs).
 }
 \examples{

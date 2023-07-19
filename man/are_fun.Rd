@@ -37,17 +37,29 @@ from steps 1) and 2).
 \examples{
 # Simulate alternative and total read counts for bulk and single-cell data
 sims.out<-simulate_data(N=15, S=2, M=5, alpha=0.1, beta=1, kappa=1, tau=999,
-                       Ktrue=4, b.mindepth=30, b.maxdepth=50, sc.mindepth=80,
-                       sc.maxdepth=120, scale=300, seed=8675309)
+                        Ktrue=4, b.mindepth=30, b.maxdepth=50, sc.mindepth=80,
+                        sc.maxdepth=120, scale=300, seed=8675309)
+
+# Estimate parameters for gene kinetics using the BPSC methodology
+# Note: can also use get_burstiness_scale() for large datasets, but estimates
+# are not as reliable
+param.out<-get_burstiness_bpsc(counts=sims.out$G)
+
+# Subset the read counts to include only those mutations with estimable gene
+# kinetics (all are estimable here, but included for utility when using real
+# data)
+Rs<-sims.out$Rs[param.out$id.g,] # single cell alternative read counts
+Xs<-sims.out$Xs[param.out$id.g,] # single cell total read counts
+Rb<-sims.out$Rb[param.out$id.g,] # bulk alternative read counts
+Xb<-sims.out$Xb[param.out$id.g,] # bulk total read counts
 
 # Run Canopy2 to get list of phylogenetic trees corresponding to all chains
 # and all subclones
-get.trees.out<-get_trees(Rs=sims.out$Rs, Rb=sims.out$Rb,
-                         Xs=sims.out$Xs, Xb=sims.out$Xb,
-                         alpha=sims.out$alpha, beta=sims.out$beta,
-                         kappa=1, tau=999, Klist=3:5,
-                         niter=5000, nchains=3, thin=10, pburn=0.1,
-                         seed=8675309)
+get.trees.out<-get_trees(Rs=Rs, Rb=Rb, Xs=Xs, Xb=Xb,
+                        alpha=param.out$alpha, beta=param.out$beta,
+                        kappa=1, tau=999, Klist=3:5,
+                        niter=5000, nchains=3, thin=10, pburn=0.1,
+                        seed=8675309)
 
 # Get best tree across all chains and subclones via DIC
 best.tree.out<-get_best_tree(get.trees.out)

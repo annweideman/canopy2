@@ -25,7 +25,7 @@ read counts with appended HGNC symbols.
 data("GBM10_postproc")
 
 # Map chromosome positions to gene IDs
-Rs<-getBM_fun(Rs)
+Rs<-get_BM_fun(GBM10_postproc@Rs)
 
 head(Rs)
 

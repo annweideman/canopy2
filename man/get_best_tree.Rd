@@ -36,8 +36,8 @@ Defaults to \code{FALSE}.}
 
 \item{project}{a string specifying the project name to add to the filename
 for output generated from \code{save.muts} and \code{save.plot}. The final
-filenames for \code{save.muts} and \code{save.plot} will be "\link{projectname}_muts.txt"
-and "\link{projectname}_plot_tree.jpg," respectively.}
+filenames for \code{save.muts} and \code{save.plot} will be "projectname_muts.txt"
+and "projectname_plot_tree.jpg," respectively.}
 
 \item{outpath}{a string specifying the location at which to save output
 generated from \code{save.muts} and \code{save.plot}.}

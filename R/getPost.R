@@ -34,6 +34,18 @@
 #'                         Ktrue=4, b.mindepth=30, b.maxdepth=50, sc.mindepth=80,
 #'                         sc.maxdepth=120, scale=300, seed=8675309)
 #'
+#' # Estimate parameters for gene kinetics using the BPSC methodology
+#' # Note: can also use get_burstiness_scale() for large datasets, but estimates
+#' # are not as reliable
+#' param.out<-get_burstiness_bpsc(counts=sims.out$G)
+#'
+#' # Subset the read counts to include only those mutations with estimable gene
+#' # kinetics (all are estimable here, but included for utility when using real
+#' # data)
+#' Rs<-sims.out$Rs[param.out$id.g,] # single cell alternative read counts
+#' Xs<-sims.out$Xs[param.out$id.g,] # single cell total read counts
+#' Rb<-sims.out$Rb[param.out$id.g,] # bulk alternative read c
+#'
 #' N <- ncol(sims.out$Rs) # Number of cells
 #' S <- ncol(sims.out$Rb) # Number of bulk samples
 #' M <- nrow(sims.out$Rs) # Number of point mutations
@@ -65,7 +77,7 @@
 #'
 #' # Evaluate the log posterior (with non-informative prior)
 #' tree$Post<-getPost(tree, Rb=sims.out$Rb, Xb=sims.out$Xb, Rs=sims.out$Rs, Xs=sims.out$Xs,
-#'                    alpha=sims.out$alpha, beta=sims.out$beta, kappa=1, tau=999)
+#'                    alpha=param.out$alpha, beta=param.out$beta, kappa=1, tau=999)
 #'
 #' tree$Post
 #'

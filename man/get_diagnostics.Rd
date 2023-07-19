@@ -55,6 +55,6 @@ get.trees.out<-get_trees(Rs=GBM10_postproc@Rs, Rb=GBM10_postproc@Rb,
                          pburn=0.1, seed=8675309)
 
 # Examine diagnostic plots
-get_diagnostics(get.trees.out, project=NULL, outpath=NULL)
+get_diagnostics(get.trees.out=get.trees.out, project=NULL, outpath=NULL)
 
 }

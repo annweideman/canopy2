@@ -6,18 +6,22 @@
 #'
 #' @param tree an object of class \code{pyhlo} representing the phylogenetic
 #' tree.
+#'
 #' @param save.muts a logical indicating whether a text file containing all
 #' mutations along the branches should be saved. If \code{TRUE}, must specify
 #' \code{project} and \code{outpath}. Defaults to \code{FALSE}.
+#'
 #' @param save.plot a logical indicating whether a plot of the best tree should be
 #' saved. If \code{TRUE}, must specify \code{project} and \code{outpath}.
 #' Defaults to \code{FALSE}.
+#'
+#' @param outpath a string specifying the location at which to save output
+#' generated from \code{save.muts} and \code{save.plot}
+#'
 #' @param project a string specifying the project name to add to the filename
 #' for output generated from \code{save.muts} and \code{save.plot}. The final
-#' filenames for \code{save.muts} and \code{save.plot} will be "[projectname]_muts.txt"
-#' and "[projectname]_plot_tree.jpg," respectively.
-#' @param outpath a string specifying the location at which to save output
-#' generated from \code{save.muts} and \code{save.plot}.
+#' filenames for \code{save.muts} and \code{save.plot} will be "projectname_muts.txt"
+#' and "projectname_plot_tree.jpg," respectively..
 #'
 #' @return
 #' Automatically plots the tree to the graphics device and outputs a matrix
@@ -86,7 +90,7 @@
 #' @export
 
 plot_tree <- function(tree, save.muts=F, save.plot=F,
-                      outpath=NULL, project=NULL,...){
+                      outpath=NULL, project=NULL){
 
   if (!inherits(tree, "phylo")){
     stop("tree must be of class \"phylo\"")
@@ -205,8 +209,9 @@ plot_tree <- function(tree, save.muts=F, save.plot=F,
     }
   })
 
-  ggp<-ggplot2::ggplot(data.frame(x = seq(0.1,1,0.1), y = seq(0.1,1,0.1), z=seq(0.1,1,0.1)),
-                       ggplot2::aes(x = x, y = y, fill=z)) +
+  temp.df<-data.frame(x = seq(0.1,1,0.1), y = seq(0.1,1,0.1), z=seq(0.1,1,0.1))
+  ggp<-ggplot2::ggplot(temp.df,
+                       ggplot2::aes(x = temp.df$x, y = temp.df$y, fill=temp.df$z)) +
     ggplot2::geom_tile() + viridis::scale_fill_viridis(option="turbo", limits=c(0,1)) +
     ggplot2::theme(legend.position = c(0.45,.5),
                    legend.direction="horizontal",

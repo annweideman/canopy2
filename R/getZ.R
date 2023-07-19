@@ -21,7 +21,9 @@
 #' tree$snv<-initialsnv(tree, snv.name=paste("mut",1:5))
 #'
 #' # Get the Z matrix from tree and SNVs
-#' tree$Z <- getZ(tree)
+#' tree$Z<-getZ(tree)
+#'
+#' tree$Z
 #'
 #' @export
 
@@ -32,12 +34,6 @@ getZ <- function(tree) {
   }
   if (is.null(tree$snv)){
     stop("tree must contains point mutations (SNVs) under slot tree$snv")
-  }
-  if (is.null(tree$Z)){
-    stop("tree must contain clonal configuration matrix, Z, under slot tree$Z")
-  }
-  if (is.null(tree$Ps)){
-    stop("tree must contain cell-to-clone assignment matrix, Ps, under slot tree$Ps")
   }
 
   K <- (nrow(tree$edge) + 2)/2 #Number of clones

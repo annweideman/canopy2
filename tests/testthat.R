@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/reference/test_package.html#special-files
 
 library(testthat)
-library(Canopy2)
+library(canopy2)
 
-test_check("Canopy2")
+test_check("canopy2")

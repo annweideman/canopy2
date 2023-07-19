@@ -37,8 +37,23 @@
 #'                         Ktrue=4, b.mindepth=30, b.maxdepth=50, sc.mindepth=80,
 #'                         sc.maxdepth=120, scale=300, seed=8675309)
 #'
+#' # Estimate parameters for gene kinetics using the BPSC methodology
+#' # Note: can also use get_burstiness_scale() for large datasets, but estimates
+#' # are not as reliable
+#' param.out<-get_burstiness_bpsc(counts=sims.out$G)
+#'
+#' # Subset the read counts to include only those mutations with estimable gene
+#' # kinetics (all are estimable here, but included for utility when using real
+#' # data)
+#' Rs<-sims.out$Rs[param.out$id.g,] # single cell alternative read counts
+#' Xs<-sims.out$Xs[param.out$id.g,] # single cell total read counts
+#' Rb<-sims.out$Rb[param.out$id.g,] # bulk alternative read counts
+#' Xb<-sims.out$Xb[param.out$id.g,] # bulk total read counts
+#'
 #' # Compute log beta-binomial density
-#' logdBetaBinom(sims.out$Rs, sims.out$Xs, sims.out$alpha, sims.out$beta)
+#' logdBetaBinom(r=Rs, x=Xs, shape1=param.out$alpha, shape2=param.out$beta)
+#'
+#' @noRd
 
 logdBetaBinom=function(r, x, shape1, shape2){
 
@@ -58,14 +73,8 @@ logdBetaBinom=function(r, x, shape1, shape2){
   if(!is.numeric(shape1) | !all(shape1>=0)){
     stop("shape1 must contain non-negative values")
   }
-  if(length(shape1)!=nrow(r)){
-    stop("shape1 must have length equal to the number of rows in r")
-  }
   if(!is.numeric(shape2) | !all(shape2>=0)){
     stop("shape2 must contain non-negative values")
-  }
-  if(length(shape2)!=nrow(r)){
-    stop("shape2 must have length equal to the number of rows in r")
   }
 
   # Compute density

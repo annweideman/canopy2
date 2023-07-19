@@ -23,10 +23,10 @@ get_trees(
 }
 \arguments{
 \item{Rs}{\eqn{M} (mutations) x \eqn{N} (cells) matrix of single-cell
-alternative read counts. Rownames must match those of argument \code{Rb}.}
+alternative read counts. Rownames must match those of argument \code{Rb}}
 
 \item{Rb}{\eqn{M} (mutations) x \eqn{S} (bulk samples) matrix of bulk
-alternative read counts. Rownames must match those of argument \code{Rs}.}
+alternative read counts. Rownames must match those of argument \code{Rs}}
 
 \item{Xs}{\eqn{M} (mutations) x \eqn{N} (cells) matrix of single-cell
 total (benign + mutated) read counts. Rownames must match those of argument
@@ -37,16 +37,16 @@ total (benign + mutated) read counts. Rownames must match those of argument
 \code{Xs}.}
 
 \item{alpha}{numeric vector of positive values with length \eqn{M}
-(number of mutations) representing the gene activation rates.}
+(number of mutations) representing the gene activation rates}
 
 \item{beta}{numeric vector of positive values with length \eqn{M}
-(number of mutations) representing the gene deactivation rates.}
+(number of mutations) representing the gene deactivation rates}
 
 \item{kappa}{a positive value used in the computation of the
-sequencing error defined as \eqn{\kappa/(\kappa+\tau)}.}
+sequencing error defined as \eqn{\kappa/(\kappa+\tau)}}
 
 \item{tau}{a positive value used in the computation of the sequencing error
-defined as \eqn{\kappa/(\kappa+\tau)}.}
+defined as \eqn{\kappa/(\kappa+\tau)}}
 
 \item{Klist}{numeric vector containing the possible numbers of subclones.}
 
@@ -59,7 +59,7 @@ For example, if \code{thin=10} then every 10th iteration is stored. Defaults
 to 10.}
 
 \item{pburn}{a decimal denoting the percentage of burn-in to store. Defaults
-to 0.10 (10\\%).}
+to 0.10 (10\\\%).}
 
 \item{seed}{a state (positive integer) to set the random number generation.
 Defaults to 8675309.}

@@ -45,7 +45,7 @@
 #'                          pburn=0.1, seed=8675309)
 #'
 #' # Examine diagnostic plots
-#' get_diagnostics(get.trees.out, project=NULL, outpath=NULL)
+#' get_diagnostics(get.trees.out=get.trees.out, project=NULL, outpath=NULL)
 #'
 #' @export
 
@@ -67,7 +67,7 @@ get_diagnostics<-function(get.trees.out, project=NULL, outpath=NULL){
     }
   }
 
-  if(dev.cur() > 1) grDevices::dev.off()
+  if(grDevices::dev.cur() > 1) grDevices::dev.off()
 
   samples<-get.trees.out$samples
   nchains<-get.trees.out$nchains
@@ -133,7 +133,7 @@ get_diagnostics<-function(get.trees.out, project=NULL, outpath=NULL){
   }
 
   counter<-1
-  par(mfrow = c(2, 2), mar=c(4,4,4,4))
+  graphics::par(mfrow = c(2, 2), mar=c(4,4,4,4))
   for (K in Klist) {
     coda::traceplot(Map(coda::as.mcmc,post.list[counter:(counter+nchains-1)]),ylab="Posterior")
               #main=bquote("Trace plot for posterior after"~.(pburn*100)*"% burn-in"))

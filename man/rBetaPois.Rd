@@ -41,6 +41,6 @@ where \eqn{\lambda \sim c*Beta(\alpha,\beta)} for \eqn{c=}\code{scale},
 \examples{
 set.seed(8675309)
 bp.vec=rBetaPois(100,0.1,1.0,3000)
-hist(bp.vec, prob=T)
+hist(bp.vec, prob=TRUE)
 
 }

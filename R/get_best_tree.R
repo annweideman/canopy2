@@ -21,8 +21,8 @@
 #' Defaults to \code{FALSE}.
 #' @param project a string specifying the project name to add to the filename
 #' for output generated from \code{save.muts} and \code{save.plot}. The final
-#' filenames for \code{save.muts} and \code{save.plot} will be "[projectname]_muts.txt"
-#' and "[projectname]_plot_tree.jpg," respectively.
+#' filenames for \code{save.muts} and \code{save.plot} will be "projectname_muts.txt"
+#' and "projectname_plot_tree.jpg," respectively.
 #' @param outpath a string specifying the location at which to save output
 #' generated from \code{save.muts} and \code{save.plot}.
 #'
@@ -182,7 +182,7 @@ get_best_tree<-function(get.trees.out,
     if(method=="gelman"){
 
       # Compute effective number of parameters
-      pD_gelman <- 2*var(logPost)
+      pD_gelman <- 2*stats::var(logPost)
       # Compute DIC
       DIC<- -2*logPost.thetabar + 2*pD_gelman
 
@@ -294,7 +294,7 @@ get_best_tree<-function(get.trees.out,
   # Store minimum DIC
   min.DIC<-DIC.list[id.min.DIC]
 
-  graphics.off()
+  grDevices::graphics.off()
 
   # Plot DIC vs number of subclones to visually locate optimal K (occurs at min DIC)
   plot(Klist, DIC.list,
@@ -302,9 +302,9 @@ get_best_tree<-function(get.trees.out,
        ylab = "DIC",
        type = "b",
        xaxt = "n")
-  axis(1, at = K)
-  abline(v = Klist[which.min(DIC.list)], lty = 2)
-  title(paste("Optimal number of subclones for Canopy2 (min DIC)"))
+  graphics::axis(1, at = K)
+  graphics::abline(v = Klist[which.min(DIC.list)], lty = 2)
+  graphics::title(paste("Optimal number of subclones for Canopy2 (min DIC)"))
 
   # Acceptance rate at minimum DIC
   accept.min.DIC<-accept.list[id.min.DIC]$acceptance.rate

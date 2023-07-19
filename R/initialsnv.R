@@ -23,6 +23,8 @@
 #' # Generate point mutations (single-nucleotide varaints) along the tree branches
 #' tree$snv<-initialsnv(tree, snv.name=paste("mut",1:5))
 #'
+#' tree$snv
+#'
 #' @export
 
 initialsnv <- function (tree, snv.name) {

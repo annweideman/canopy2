@@ -24,22 +24,22 @@ Imports:
     biomaRt,
     BPSC,
     coda,
+    cowplot,
     DirichletReg,
-    ggh4x,
     ggplot2,
     ggplotify,
-    ggpubr,
-    ggthemes,
     ggtree,
+    graphics,
+    grDevices,
     gridExtra,
     gtools,
     magrittr,
+    mathjaxr,
     Rdpack,
-    SCALE (>= 1.3.0),
+    stats,
+    utils,
     viridis
 RdMacros: Rdpack
-Remotes: 
-    yuchaojiang/SCALE
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
 Suggests: 
@@ -49,5 +49,7 @@ Suggests:
     testthat (>= 3.0.0)
 VignetteBuilder: knitr
 Config/testthat/edition: 3
+LazyData: true
+LazyDataCompression:xz
 Depends: 
-    R (>= 2.10)
+    R (>= 3.5.0)
