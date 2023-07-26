@@ -85,90 +85,15 @@
 
 getPost<-function(tree, Rb, Xb, Rs, Xs, alpha, beta, kappa, tau){
 
-  if (!inherits(tree, "phylo")){
-    stop("tree must be of class \"phylo\"")
-  }
-  if (is.null(tree$Z)){
-    stop("tree must contain clonal configuration matrix, Z, under slot tree$Z")
-  }
-  if (is.null(tree$Ps)){
-    stop("tree must contain cell-to-clone assignment matrix, Ps, under slot tree$Ps")
-  }
-  if (is.null(tree$Pb)){
-    stop("tree must contain sample-to-clone assignment matrix, Pb, under slot tree$Pb")
-  }
-  if (!inherits(Rb, "matrix")){
-    stop("Rb must be of class \"matrix\"")
-  }
-  if(!all(Rb==round(Rb)) | !is.numeric(Rb) | !all(Rb>=0)){
-    stop("Rb must contain positive integers")
-  }
-  if (!inherits(Xb, "matrix")){
-    stop("Xb must be of class \"matrix\"")
-  }
-  if(!all(Xb==round(Xb)) | !is.numeric(Xb) | !all(Xb>=0)){
-    stop("Xb must contain positive integers")
-  }
-  if (!inherits(Rs, "matrix")){
-    stop("Rs must be of class \"matrix\"")
-  }
-  if(!all(Rs==round(Rs)) | !is.numeric(Rs) | !all(Rs>=0)){
-    stop("Rs must contain positive integers")
-  }
-  if (!inherits(Xs, "matrix")){
-    stop("Xs must be of class \"matrix\"")
-  }
-  if(!all(Xs==round(Xs)) | !is.numeric(Xs) | !all(Xs>=0)){
-    stop("Xs must contain positive integers")
-  }
-  if (!(all(rownames(Rs) == rownames(Rb)))) {
-    stop("Rownames for Rs and Rb are not identical")
-  }
-  if (!(all(rownames(Xs) == rownames(Xb)))) {
-    stop("Rownames for Xs and Xb are not identical")
-  }
-  if (!(all(colnames(Rs) == colnames(Xs)))) {
-    stop("Colnames for Rs and Xs are not identical")
-  }
-  if (!(all(colnames(Rb) == colnames(Xb)))) {
-    stop("Colnames for Rb and Xb are not identical")
-  }
-  if (!all(alpha > 0) | !is.numeric(alpha)){
-    stop("All values in vector alpha must be greater than 0")
-  }
-  if (length(alpha)!=nrow(Rs)){
-    stop("alpha must be of length equal to the number of rows in Rs (number of
-         mutations)")
-  }
-  if (!all(beta > 0) | !is.numeric(beta)){
-    stop("All values in vector beta must be greater than 0")
-  }
-  if (length(beta)!=nrow(Rs)){
-    stop("beta must be of length equal to the number of rows in Rs (number of
-         mutations)")
-  }
-  if (length(kappa)!=1){
-    stop("kappa must be of length 1")
-  }
-  if (kappa <= 0 | !is.numeric(kappa)){
-    stop("kappa must be greater than 0")
-  }
-  if (length(tau)!=1){
-    stop("tau must be of length 1")
-  }
-  if (tau <= 0 | !is.numeric(tau)){
-    stop("tau must be greater than 0")
-  }
-
-# Mixture of beta-binomial likelihoods for the single-cell data
-Qs=tree$Z%*%tree$Ps
-logPost=sum((logdBetaBinom(Rs, Xs, alpha, beta))*Qs+
-            (logdBetaBinom(Rs, Xs, kappa, tau))*(1-Qs))
-
-# Combine with binomial likelihood (written up to a proportionality constant)
-# for the bulk data
-Qb=pmin(pmax(1/2*tree$Z%*%tree$Pb, 0.01),0.99)
-logPost=logPost+sum(lchoose(Xb,Rb) + Rb*log(Qb)+(Xb-Rb)*log(1-Qb))
-return(logPost)
+  # Mixture of beta-binomial likelihoods for the single-cell data
+  Qs=tree$Z%*%tree$Ps
+  logPost=sum((logdBetaBinom(Rs, Xs, alpha, beta))*Qs+
+              (logdBetaBinom(Rs, Xs, kappa, tau))*(1-Qs))
+  
+  # Combine with binomial likelihood (written up to a proportionality constant)
+  # for the bulk data
+  Qb=pmin(pmax(1/2*tree$Z%*%tree$Pb, 0.01),0.99)
+  logPost=logPost+sum(lchoose(Xb,Rb) + Rb*log(Qb)+(Xb-Rb)*log(1-Qb))
+  return(logPost)
 
 }
