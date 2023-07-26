@@ -34,22 +34,6 @@
 #' @export
 
 rBetaPois = function(n,alpha,beta,scale=1) {
-
-  if (n <= 0 | !is.numeric(n) | n!=round(n)){
-    stop("n must be a positive integer")
-  }
-
-  if(alpha<=0 | !is.numeric(alpha)){c
-    stop("alpha must be a number greater than 0.")
-  }
-
-  if(beta<=0 | !is.numeric(beta)){
-    stop("beta must be a number greater than 0.")
-  }
-
-  if(scale<=0 | !is.numeric(scale)){
-    stop("scale must be a number greater than 0.")
-  }
   lambda<-scale*stats::rbeta(n,shape1=alpha,shape2=beta)
   stats::rpois(n,lambda)
 }
