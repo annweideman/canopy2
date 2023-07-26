@@ -39,11 +39,13 @@ Install the devel version from GitHub (HIGHLY recommended, as this will allow yo
 
 ```
 # Dependencies
-list.of.packages<-c("ape", "bayesplot", "biomaRt", "BPSC", "coda", "DirichletReg", "ggh4x", "ggplot2", "ggplotify", "ggpubr", "ggthemes",
+list.of.packages<-c("ape", "bayesplot", "devtools", "BiocManager", "coda", "DirichletReg", "ggh4x", "ggplot2", "ggplotify", "ggpubr", "ggthemes",
 "ggtree", "gridExtra", "gtools", "Rdpack", "SCALE", "viridis")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 
+BiocManager::install("biomaRt")
+devtools::install_github("nghiavtr/BPSC")
 devtools::install_github("annweideman/canopy2")
 ```
 
