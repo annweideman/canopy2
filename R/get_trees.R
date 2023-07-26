@@ -300,14 +300,15 @@ get_trees<-function(Rs, Rb, Xs, Xb, alpha, beta, kappa, tau,
       S=ncol(tree$Pb) # number of bulk samples
       K=nrow(tree$Pb) # number of clones
       for(t in 1:S){ # Update each bulk sample through a loop
+        for(k in 1:K){
           Pb.new=tree$Pb
-          # dirichlet distribution with concentration parameter equal to the current proportion
-          Pb.new[,t]= gtools::rdirichlet(1,alpha=Pb.new[,t])
+          # uniform distribution centered at the current proportion
+          Pb.new[k,t]=runif(1, min = max(0,Pb.new[k,t]-0.1), max=min(1,Pb.new[k,t]+0.1)) 
+          Pb.new[,t]=Pb.new[,t]/sum(Pb.new[,t])
           tree.new=tree
           tree.new$Pb=Pb.new
           tree.new$Post=getPost(tree.new, Rb, Xb, Rs, Xs, alpha, beta, kappa, tau)
-          r=exp(tree.new$Post+log(gtools::ddirichlet(tree$Pb[,t],alpha=Pb.new[,t]))
-                -tree$Post-log(gtools::ddirichlet(Pb.new[,t],alpha=tree$Pb[,t])))
+          r=exp(tree.new$Post-tree$Post)
           if(r>= stats::runif(1)){
             tree=tree.new
             accept<-c(accept,1)
@@ -315,11 +316,10 @@ get_trees<-function(Rs, Rb, Xs, Xb, alpha, beta, kappa, tau,
             tree=tree
             accept<-c(accept,0)
           }
-        #}
+        }
       }
       return(list(tree,accept))
     }
-
 
     accept<-c()
 
