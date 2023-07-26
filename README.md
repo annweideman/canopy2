@@ -44,7 +44,7 @@ list.of.packages<-c("ape", "bayesplot", "biomaRt", "BPSC", "coda", "DirichletReg
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 
-devtools::install_github("annweideman/canopy2/package")
+devtools::install_github("annweideman/canopy2")
 ```
 
 
