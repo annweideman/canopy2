@@ -56,29 +56,7 @@
 #' @noRd
 
 logdBetaBinom=function(r, x, shape1, shape2){
-
-  # Check arguments
-  if (!inherits(r, "matrix")){
-    stop("r must be of class \"matrix\"")
-  }
-  if(!all(r==round(r)) | !is.numeric(r) | !all(r>=0)){
-    stop("r must contain positive integers")
-  }
-  if (!inherits(x, "matrix")){
-    stop("x must be of class \"matrix\"")
-  }
-  if(!all(x==round(x)) | !is.numeric(x) | !all(x>=0)){
-    stop("x must contain positive integers")
-  }
-  if(!is.numeric(shape1) | !all(shape1>=0)){
-    stop("shape1 must contain non-negative values")
-  }
-  if(!is.numeric(shape2) | !all(shape2>=0)){
-    stop("shape2 must contain non-negative values")
-  }
-
   # Compute density
   lchoose(x,r)+lbeta(r+shape1, x-r+shape2)-lbeta(shape1, shape2)
-
 }
 
