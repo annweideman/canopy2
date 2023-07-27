@@ -155,8 +155,25 @@ plot_tree <- function(tree, save.muts=F, save.plot=F,
   for (i in 1:length(edge.label)) {
     gene <- snv.name[which(snvedge == edge.label[i])]
     mut.branch.mat[i,1]=paste0("M", i, ": ", paste(gene, collapse = ', '))
-    #mut.list<-c(mut.list,paste(gene,collapse = ', '))
   }
+
+  # Sort Ps to aggregate 1's along main diagonal for better visualization
+  temp.mat<-matrix(NA,nrow=nrow(tree$Ps),ncol=1)
+  rownames(temp.mat)<-rownames(tree$Ps)
+  id.ones<-lapply(1:nrow(tree$Ps),function(x) which(tree$Ps[x,]==1))
+
+  # Generate mini binary matrices that are concatenated to create final matrix
+  for(list.id in length(id.ones):1){
+      temp.mat0<-matrix(0,nrow=nrow(tree$Ps),ncol=length(id.ones[[list.id]]))
+      temp.mat0[list.id,]<-1
+      colnames(temp.mat0)<-names(id.ones[[list.id]])
+      temp.mat<-cbind(temp.mat,temp.mat0)
+  }
+
+  # Remove vector of NAs that was introduced in previous step
+  temp.mat<-temp.mat[,-1]
+  # Replace Ps in final tree with new Ps that has 1's along main diagonal
+  tree$Ps<-temp.mat
 
   # Generate plot for Z
   p1 <- plot_Z(tree)
