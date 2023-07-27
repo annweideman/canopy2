@@ -232,24 +232,6 @@ get_best_tree<-function(get.trees.out,
     # Store the final tree
     final.tree<-best.chain$tree[[id.tree]]
 
-    # Sort Ps to aggregate 1's along main diagonal for better visualization
-    temp.mat<-matrix(NA,nrow=nrow(final.tree$Ps),ncol=1)
-    rownames(temp.mat)<-rownames(final.tree$Ps)
-    id.ones<-lapply(1:nrow(final.tree$Ps),function(x) which(final.tree$Ps[x,]==1))
-
-    # Generate mini binary matrices that are concatenated to create final matrix
-    for(list.id in length(id.ones):1){
-        temp.mat0<-matrix(0,nrow=nrow(final.tree$Ps),ncol=length(id.ones[[list.id]]))
-        temp.mat0[list.id,]<-1
-        colnames(temp.mat0)<-names(id.ones[[list.id]])
-        temp.mat<-cbind(temp.mat,temp.mat0)
-    }
-
-    # Remove vector of NAs that was introduced in previous step
-    temp.mat<-temp.mat[,-1]
-    # Replace Ps in final tree with new Ps that has 1's along main diagonal
-    final.tree$Ps<-temp.mat
-
     # Store output
     temp.out<-list("K"=K,
                    "tree"=final.tree,
