@@ -65,4 +65,3 @@ Xb<-sims.out$Xb[param.out$id.g,] # bulk total read counts
 logdBetaBinom(r=Rs, x=Xs, shape1=param.out$alpha, shape2=param.out$beta)
 
 }
-\keyword{internal}
