@@ -18,6 +18,7 @@ get_trees(
   nchains = 20,
   thin = 10,
   pburn = 0.1,
+  ncores = NULL,
   seed = 8675309
 )
 }
@@ -61,6 +62,10 @@ to 10.}
 \item{pburn}{a decimal denoting the percentage of burn-in to store. Defaults
 to 0.10 (10\\\%).}
 
+\item{ncores}{the number of cores to use for parallel execution. If not
+specified, defaults to one-half the number of cores detected by the
+parallelly package.}
+
 \item{seed}{a state (positive integer) to set the random number generation.
 Defaults to 8675309.}
 }
@@ -94,7 +99,7 @@ get.trees.out<-get_trees(Rs=GBM10_postproc@Rs, Rb=GBM10_postproc@Rb,
                          alpha=GBM10_postproc@param.est$alpha,
                          beta=GBM10_postproc@param.est$beta, kappa=1,
                          tau=999, Klist=4:6, niter=1000, nchains=5, thin=10,
-                         pburn=0.1, seed=8675309)
+                         pburn=0.1, ncores=4, seed=8675309)
 
 # Examine diagnostic plots
 get_diagnostics(get.trees.out, project=NULL, outpath=NULL)

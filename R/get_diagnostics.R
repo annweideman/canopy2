@@ -153,24 +153,25 @@ get_diagnostics<-function(get.trees.out, project=NULL, outpath=NULL){
                    onefile = TRUE, height=5)
   }
 
-  counter<-1
-  stop<-0
-  for (K in Klist) {
-    while(stop<nchains*counter){
-      start<-1+stop
-      stop<-ifelse(start+3<counter*nchains, start+3, counter*nchains)
-      graphics::par(mfrow = c(1, stop-start+1),oma = c(2, 0, 4, 0))
-      for(i in (start-nchains*(counter-1)):(stop-nchains*(counter-1))){
+  chain.id<-1
+  count<-1
+  start<-1
+  end<-(Klist-(min(Klist)-1))*nchains
+  for (K in Klist){
+      graphics::par(mfrow = c(1, 4),oma = c(2, 0, 4, 0))
+      for(i in start:end[count]){
         stats::acf(post.list[[i]],
-                   main=paste("Chain", eval(parse(text="i"))))
+                   main=paste("Chain", eval(parse(text="chain.id"))))
         graphics::mtext(side=3, line=1.5, cex=1.2,
-                      bquote("Lag ACF after"~.(pburn*100)*"% burn-in"),
-                      outer=T)
-      graphics::mtext(side=3, line=0.5, cex=1.1,
-                      paste0("(K = ",K,")"), col="blue", outer=T)
+                        bquote("Lag ACF after"~.(pburn*100)*"% burn-in"),
+                        outer=T)
+        graphics::mtext(side=3, line=0.5, cex=1.1,
+                        paste0("(K = ",K,")"), col="blue", outer=T)
+        chain.id<-chain.id+1
       }
-    }
-    counter<-counter+1
+      start<-end[count]+1
+      count<-count+1
+      chain.id<-1
   }
 
   if(is.null(outpath)==F){grDevices::dev.off()}
