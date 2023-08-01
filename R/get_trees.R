@@ -30,8 +30,8 @@
 #'  to 10.
 #' @param pburn a decimal denoting the percentage of burn-in to store. Defaults
 #' to 0.10 (10\\%).
-#' @param ncores the number of cores to use for parallel execution. If not 
-#' specified, defaults to one-half the number of cores detected by the 
+#' @param ncores the number of cores to use for parallel execution. If not
+#' specified, defaults to one-half the number of cores detected by the
 #' parallelly package.
 #' @param seed a state (positive integer) to set the random number generation.
 #' Defaults to 8675309.
@@ -56,7 +56,7 @@
 #'
 #' # Run Canopy2 to get list of phylogenetic trees corresponding to all chains
 #' # and all subclones
-#' get.trees.out<-get_trees_parallel_amw(Rs=GBM10_postproc@Rs, Rb=GBM10_postproc@Rb,
+#' get.trees.out<-get_trees(Rs=GBM10_postproc@Rs, Rb=GBM10_postproc@Rb,
 #'                          Xs=GBM10_postproc@Xs, Xb=GBM10_postproc@Xb,
 #'                          alpha=GBM10_postproc@param.est$alpha,
 #'                          beta=GBM10_postproc@param.est$beta, kappa=1,
@@ -73,8 +73,8 @@
 #'
 #' @export
 
-get_trees_parallel_amw<-function(Rs, Rb, Xs, Xb, alpha, beta, kappa, tau,
-                    Klist, niter=10000, nchains=20, thin=10, pburn=0.1, 
+get_trees<-function(Rs, Rb, Xs, Xb, alpha, beta, kappa, tau,
+                    Klist, niter=10000, nchains=20, thin=10, pburn=0.1,
                     ncores=NULL, seed=8675309){
 
   # check arguments
@@ -204,7 +204,7 @@ get_trees_parallel_amw<-function(Rs, Rb, Xs, Xb, alpha, beta, kappa, tau,
     }
     tolower(os)
   }
-  
+
   # Number of iterations after thinning
   niter.thin<-niter/thin
 
@@ -406,11 +406,11 @@ get_trees_parallel_amw<-function(Rs, Rb, Xs, Xb, alpha, beta, kappa, tau,
       return(list("K" = K, "tree" = tree.list, "posteriors" = post, "acceptance rate" = accept.rate))
 
     }
-    
+
     # Parallel processing across chains
-    # Get operating system 
+    # Get operating system
     os<-get_os()
-    
+
     # If Windows
     # Note: Windows doesn't supporting forking, so must register cluster
     # https://stackoverflow.com/questions/17196261
@@ -422,12 +422,12 @@ get_trees_parallel_amw<-function(Rs, Rb, Xs, Xb, alpha, beta, kappa, tau,
       out.mcmc<-parallel::parLapply(NULL, 1:nchains, function(chain) MH_within_Gibbs(chain))
       parallel::stopCluster(cl)
     }
-    
+
     # If Unix-based system (e.g, Darwin (macOS), Linux)
     else{
       out.mcmc <- parallel::mclapply(1:nchains, MH_within_Gibbs, mc.cores=ncores)
     }
-      
+
     samples.out<-c(samples.out,out.mcmc)
 
   }
