@@ -53,9 +53,9 @@
 #' # Compute log beta-binomial density
 #' logdBetaBinom(r=Rs, x=Xs, shape1=param.out$alpha, shape2=param.out$beta)
 #'
-#' @keywords internal
+#' @export
 
-logdBetaBinom=function(r, x, shape1, shape2){
+logdBetaBinom<-function(r, x, shape1, shape2){
   # Compute density
   lchoose(x,r)+lbeta(r+shape1, x-r+shape2)-lbeta(shape1, shape2)
 }
