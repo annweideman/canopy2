@@ -152,7 +152,7 @@ The densities for the gene expression data are defined elsewhere in
 }
 \examples{
 # Simulate read counts
-sims.out<-simulate_data(N=15, S=2, M=5, alpha=0.1, beta=1, kappa=1, tau=999,
+sims.out<-simulate_data(N=30, S=2, M=5, alpha=0.1, beta=1, kappa=1, tau=999,
                        Ktrue=4, b.mindepth=30, b.maxdepth=50, sc.mindepth=80,
                        sc.maxdepth=120, scale=300, seed=8675309)
 
@@ -166,7 +166,7 @@ get.trees.out<-get_trees(Rs=sims.out$Rs, Rb=sims.out$Rb,
                          Xs=sims.out$Xs, Xb=sims.out$Xb,
                          alpha=param.out$alpha, beta=param.out$beta,
                          kappa=1, tau=999, Klist=3:5,
-                         niter=5000, nchains=3, thin=10, pburn=0.1,
+                         niter=10000, nchains=20, thin=20, pburn=0.5,
                          seed=8675309)
 
 # Examine diagnostic plots

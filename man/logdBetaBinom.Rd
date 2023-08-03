@@ -44,7 +44,7 @@ function is only defined in \eqn{\mathbb{R}} for non-negative \eqn{\alpha} and
 }
 \examples{
 # Simulate read counts
-sims.out<-simulate_data(N=15, S=2, M=5, alpha=0.1, beta=1.0, kappa=1, tau=999,
+sims.out<-simulate_data(N=30, S=2, M=5, alpha=0.1, beta=1.0, kappa=1, tau=999,
                         Ktrue=4, b.mindepth=30, b.maxdepth=50, sc.mindepth=80,
                         sc.maxdepth=120, scale=300, seed=8675309)
 

@@ -16,8 +16,8 @@ get_trees(
   Klist,
   niter = 10000,
   nchains = 20,
-  thin = 10,
-  pburn = 0.1,
+  thin = 20,
+  pburn = 0.5,
   ncores = NULL,
   seed = 8675309
 )
@@ -57,10 +57,10 @@ defined as \eqn{\kappa/(\kappa+\tau)}}
 
 \item{thin}{a number representing the increment at which to store MCMC output.
 For example, if \code{thin=10} then every 10th iteration is stored. Defaults
-to 10.}
+to 20.}
 
 \item{pburn}{a decimal denoting the percentage of burn-in to store. Defaults
-to 0.10 (10\\\%).}
+to 0.50 (50\\\%).}
 
 \item{ncores}{the number of cores to use for parallel execution. If not
 specified, defaults to one-half the number of cores detected by the
@@ -98,8 +98,8 @@ get.trees.out<-get_trees(Rs=GBM10_postproc@Rs, Rb=GBM10_postproc@Rb,
                          Xs=GBM10_postproc@Xs, Xb=GBM10_postproc@Xb,
                          alpha=GBM10_postproc@param.est$alpha,
                          beta=GBM10_postproc@param.est$beta, kappa=1,
-                         tau=999, Klist=4:6, niter=1000, nchains=5, thin=10,
-                         pburn=0.1, ncores=4, seed=8675309)
+                         tau=999, Klist=4:6, niter=10000, nchains=20, thin=20,
+                         pburn=0.5, ncores=4, seed=8675309)
 
 # Examine diagnostic plots
 get_diagnostics(get.trees.out, project=NULL, outpath=NULL)
