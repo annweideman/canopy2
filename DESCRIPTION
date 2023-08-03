@@ -1,7 +1,7 @@
 Package: canopy2
 Type: Package
 Title: Canopy2: Tumor Phylogeny Inference Using Bulk DNA and Single-Cell RNA Sequencing
-Version: 0.0.1.9000
+Version: 0.1.0
 Authors@R: 
     person(given = "Ann Marie",
            family = "Weideman",
@@ -50,6 +50,6 @@ Suggests:
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 LazyData: true
-LazyDataCompression:xz
+LazyDataCompression: xz
 Depends: 
     R (>= 3.5.0)
