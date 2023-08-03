@@ -116,7 +116,7 @@
 #'
 #' @examples
 #' # Simulate read counts
-#' sims.out<-simulate_data(N=15, S=2, M=5, alpha=0.1, beta=1, kappa=1, tau=999,
+#' sims.out<-simulate_data(N=30, S=2, M=5, alpha=0.1, beta=1, kappa=1, tau=999,
 #'                        Ktrue=4, b.mindepth=30, b.maxdepth=50, sc.mindepth=80,
 #'                        sc.maxdepth=120, scale=300, seed=8675309)
 #'
@@ -130,7 +130,7 @@
 #'                          Xs=sims.out$Xs, Xb=sims.out$Xb,
 #'                          alpha=param.out$alpha, beta=param.out$beta,
 #'                          kappa=1, tau=999, Klist=3:5,
-#'                          niter=5000, nchains=3, thin=10, pburn=0.1,
+#'                          niter=10000, nchains=20, thin=20, pburn=0.5,
 #'                          seed=8675309)
 #'
 #' # Examine diagnostic plots
@@ -348,7 +348,7 @@ simulate_data<-function(N, S, M, alpha, beta, kappa=1, tau=999, Ktrue,
   # expression data
   G <- t(sapply(1:length(alpha), function(i)
            rBetaPois(n=N,alpha=alpha[i],beta=beta[i],scale=scale[i])))
-  rownames(G) <- paste0("snv", 1:nrow(G))
+  rownames(G) <- paste0("snv_snp", 1:nrow(G))
   colnames(G) <- paste0("cell", 1:ncol(G))
 
   return(list(true.tree=tree, Rs=Rs, Rb=Rb, Xs=Xs, Xb=Xb, G=G))

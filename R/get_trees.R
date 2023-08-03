@@ -27,9 +27,9 @@
 #' @param nchains number of chains for MCMC. Defaults to 20.
 #' @param thin a number representing the increment at which to store MCMC output.
 #'  For example, if \code{thin=10} then every 10th iteration is stored. Defaults
-#'  to 10.
+#'  to 20.
 #' @param pburn a decimal denoting the percentage of burn-in to store. Defaults
-#' to 0.10 (10\\%).
+#' to 0.50 (50\\%).
 #' @param ncores the number of cores to use for parallel execution. If not
 #' specified, defaults to one-half the number of cores detected by the
 #' parallelly package.
@@ -60,8 +60,8 @@
 #'                          Xs=GBM10_postproc@Xs, Xb=GBM10_postproc@Xb,
 #'                          alpha=GBM10_postproc@param.est$alpha,
 #'                          beta=GBM10_postproc@param.est$beta, kappa=1,
-#'                          tau=999, Klist=4:6, niter=1000, nchains=5, thin=10,
-#'                          pburn=0.1, ncores=4, seed=8675309)
+#'                          tau=999, Klist=4:6, niter=10000, nchains=20, thin=20,
+#'                          pburn=0.5, ncores=4, seed=8675309)
 #'
 #' # Examine diagnostic plots
 #' get_diagnostics(get.trees.out, project=NULL, outpath=NULL)
@@ -74,7 +74,7 @@
 #' @export
 
 get_trees<-function(Rs, Rb, Xs, Xb, alpha, beta, kappa, tau,
-                    Klist, niter=10000, nchains=20, thin=10, pburn=0.1,
+                    Klist, niter=10000, nchains=20, thin=20, pburn=0.5,
                     ncores=NULL, seed=8675309){
 
   # check arguments
@@ -186,25 +186,6 @@ get_trees<-function(Rs, Rb, Xs, Xb, alpha, beta, kappa, tau,
     stop("seed must be a positive integer")
   }
 
-
-  # Function to detect operating system (OS)
-  # From https://www.r-bloggers.com/identifying-the-os-from-r/
-  get_os <- function(){
-    sysinf <- Sys.info()
-    if (!is.null(sysinf)){
-      os <- sysinf['sysname']
-      if (os == 'Darwin')
-        os <- "osx"
-    } else { ## mystery machine
-      os <- .Platform$OS.type
-      if (grepl("^darwin", R.version$os))
-        os <- "osx"
-      if (grepl("linux-gnu", R.version$os))
-        os <- "linux"
-    }
-    tolower(os)
-  }
-
   # Number of iterations after thinning
   niter.thin<-niter/thin
 
@@ -231,182 +212,6 @@ get_trees<-function(Rs, Rb, Xs, Xb, alpha, beta, kappa, tau,
     # Print message to console
     print(paste("Sample in tree space with", K, "subclones"))
 
-    #----------------------------------------------------------------------------
-    # Estimating unknowns
-    #----------------------------------------------------------------------------
-
-    # The unknowns are Pb, Ps, Z
-
-    #-----------------------------------------------
-    # Initialization
-    #-----------------------------------------------
-    initialize<-function(seedling){
-
-      set.seed(seedling)
-
-      # Generate a tree
-      text = paste0(paste0(paste(paste0("(", 1:(K - 1), ","),
-                                 collapse = ""), K), paste(rep(")", (K - 1)), collapse = ""), ";")
-      tree <- ape::read.tree(text = text); rm(text)
-      tree$edge # The edge of the tree
-
-      # Generate point mutations (SNV: single-nucleotide alteration) along the tree branches
-      tree$snv=initialsnv(tree, rownames(Rs))
-
-      # Get the Z matrix from tree and snv
-      tree$Z = getZ(tree)
-      tree$Z # M mutations x K clones
-
-      # Generate the proportion matrix
-      # Bulk samples
-      Pb=t(DirichletReg::rdirichlet(S, alpha=rep(1/K,K)))
-      rownames(Pb)=paste0('clone',1:K)
-      colnames(Pb)=colnames(Rb)
-      apply(Pb,2,sum)
-
-      # Single cells
-      Ps=stats::rmultinom(N, 1, prob = rep(1/K, K))
-      rownames(Ps)=paste0('clone',1:K)
-      colnames(Ps)=colnames(Rs)
-      apply(Ps,2,sum)
-      tree$Pb=Pb; rm(Pb)
-      tree$Ps=Ps; rm(Ps)
-
-      # Evaluate the posterior (with non-informative prior)
-      tree$Post=getPost(tree, Rb, Xb, Rs, Xs, alpha, beta, kappa, tau)
-
-      return(tree)
-    }
-
-    #---------------------------------------------------
-    # Metropolis sampling (see Algorithm 1, main text)
-    #---------------------------------------------------
-    sampZ=function(tree,...){
-      M = nrow(tree$snv) # number of mutations
-      for(i in 1:M){ # Update each mutation through a loop
-        snv.new = tree$snv
-        # sample from edges excluding the leftmost and the current edge
-        # the probability for each edge to be selected is the same (i.e., symmetric)
-        snv.edge.i = sample(setdiff(2:nrow(tree$edge), tree$snv[i,4]), size = 1)
-        snv.new[i, 2:4] = c(tree$edge[snv.edge.i, 1:2], snv.edge.i)
-        tree.new=tree
-        tree.new$snv=snv.new
-        tree.new$Z=getZ(tree.new)
-
-        tree.new$Post=getPost(tree.new, Rb, Xb, Rs, Xs, alpha, beta, kappa, tau)
-        r=exp(tree.new$Post-tree$Post)
-        if(r>= stats::runif(1)){
-          tree=tree.new
-          accept<-c(accept,1)
-        } else{
-          tree=tree
-          accept<-c(accept,0)
-        }
-      }
-      return(list(tree,accept))
-    }
-
-    sampPs=function(tree,...){
-      N=ncol(tree$Ps) # number of cells
-      K=nrow(tree$Ps) # number of clones
-      for(j in 1:N){ # Update each cell through a loop
-        Ps.new=tree$Ps
-        # sample from clones excluding the current clone
-        # the probability for each clone to be selected is the same (i.e., symmetric)
-        Ps.new[,j]=stats::rmultinom(1,1,prob=(1-tree$Ps[,j])/(K-1))
-        tree.new=tree
-        tree.new$Ps=Ps.new
-        tree.new$Post=getPost(tree.new, Rb, Xb, Rs, Xs, alpha, beta, kappa, tau)
-
-        r=exp(tree.new$Post-tree$Post)
-        if(r>= stats::runif(1)){
-          tree=tree.new
-          accept<-c(accept,1)
-        } else{
-          tree=tree
-          accept<-c(accept,0)
-        }
-      }
-      return(list(tree,accept))
-    }
-
-    sampPb=function(tree,...){
-      S=ncol(tree$Pb) # number of bulk samples
-      K=nrow(tree$Pb) # number of clones
-      for(t in 1:S){ # Update each bulk sample through a loop
-        for(k in 1:K){
-          Pb.new=tree$Pb
-          # uniform distribution centered at the current proportion
-          Pb.new[k,t]=runif(1, min = max(0,Pb.new[k,t]-0.1), max=min(1,Pb.new[k,t]+0.1))
-          Pb.new[,t]=Pb.new[,t]/sum(Pb.new[,t])
-          tree.new=tree
-          tree.new$Pb=Pb.new
-          tree.new$Post=getPost(tree.new, Rb, Xb, Rs, Xs, alpha, beta, kappa, tau)
-          r=exp(tree.new$Post-tree$Post)
-          if(r>= stats::runif(1)){
-            tree=tree.new
-            accept<-c(accept,1)
-          }else{
-            tree=tree
-            accept<-c(accept,0)
-          }
-        }
-      }
-      return(list(tree,accept))
-    }
-
-    accept<-c()
-
-    #--------------------------------------------------------------------
-    # Gibbs with nested Metropolis-Hastings (see Algorithm 2, main text)
-    #--------------------------------------------------------------------
-
-    MH_within_Gibbs<-function(chain){
-
-      # Print message to console
-      print(paste("Running chain", chain, "out of", nchains, "..."))
-
-      tree <- initialize(seedling = (chain + seed))
-      tree.list <- list()
-      accept <- numeric() # Initialize an empty numeric vector to store acceptance values
-
-      for (iter in 1:niter) {
-
-        tosample <- sample.int(1, n = 3)
-
-        if (tosample == 1) {
-          sampZout <- sampZ(tree)
-          tree <- sampZout[[1]]
-          accept <- c(accept, sampZout[[2]])
-        } else if (tosample == 2) {
-          sampPbout <- sampPb(tree)
-          tree <- sampPbout[[1]]
-          accept <- c(accept, sampPbout[[2]])
-        } else {
-          sampPsout <- sampPs(tree)
-          tree <- sampPsout[[1]]
-          accept <- c(accept, sampPsout[[2]])
-        }
-
-        # Store only thinned samples from posterior
-        if (iter %% thin == 0) {
-          tree.list[[length(tree.list) + 1]] <- tree
-        }
-      }
-
-      # Grab posterior probabilities
-      post <- sapply(1:niter.thin, function(x) tree.list[[x]]$Post)
-
-      # Remove burn-in from samples
-      tree.list <- tree.list[-c(1:burn.len)]
-      post <- post[-c(1:burn.len)]
-      accept <- accept[-c(1:burn.len)]
-      accept.rate <- sum(accept) / length(accept)
-
-      return(list("K" = K, "tree" = tree.list, "posteriors" = post, "acceptance rate" = accept.rate))
-
-    }
-
     # Parallel processing across chains
     # Get operating system
     os<-get_os()
@@ -419,13 +224,16 @@ get_trees<-function(Rs, Rb, Xs, Xb, alpha, beta, kappa, tau,
       parallel::setDefaultCluster(cl)
       parallel::clusterExport(NULL, c('initialsnv','getZ','logdBetaBinom','getPost'))
       parallel::clusterEvalQ(NULL, {library(stats); library(ape); library(DirichletReg)})
-      out.mcmc<-parallel::parLapply(NULL, 1:nchains, function(chain) MH_within_Gibbs(chain))
+      out.mcmc<-parallel::parLapply(NULL, 1:nchains,
+                                    function(chain) MH_within_Gibbs(chain),
+                                    K=K, seed=seed)
       parallel::stopCluster(cl)
     }
 
     # If Unix-based system (e.g, Darwin (macOS), Linux)
     else{
-      out.mcmc <- parallel::mclapply(1:nchains, MH_within_Gibbs, mc.cores=ncores)
+      out.mcmc <- parallel::mclapply(1:nchains, MH_within_Gibbs, mc.cores=ncores,
+                                     K=K, seed=seed)
     }
 
     samples.out<-c(samples.out,out.mcmc)

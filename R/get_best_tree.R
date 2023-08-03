@@ -65,8 +65,8 @@
 #'                          Xs=GBM10_postproc@Xs, Xb=GBM10_postproc@Xb,
 #'                          alpha=GBM10_postproc@param.est$alpha,
 #'                          beta=GBM10_postproc@param.est$beta, kappa=1,
-#'                          tau=999, Klist=4:6, niter=1000, nchains=5, thin=10,
-#'                          pburn=0.1, seed=8675309)
+#'                          tau=999, Klist=4:6, niter=10000, nchains=20, thin=20,
+#'                          pburn=0.5, seed=8675309)
 #'
 #' # Examine diagnostic plots
 #' get_diagnostics(get.trees.out, project=NULL, outpath=NULL)
