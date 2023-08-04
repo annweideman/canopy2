@@ -4,7 +4,7 @@
 \alias{initialize_tree}
 \title{Internal function}
 \usage{
-initialize_tree(seedling, K, Rs, S, Rb, N, Xb, Xs, alpha, tau)
+initialize_tree(seedling, K, Rs, S, Rb, N, Xb, Xs, alpha, beta, kappa, tau)
 }
 \description{
 Initialize phylogenetic tree.
