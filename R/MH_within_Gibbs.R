@@ -14,7 +14,7 @@ MH_within_Gibbs<-function(chain, K, nchains, niter, thin, niter.thin, burn.len,
   # Print message to console
   print(paste("Running chain", chain, "out of", nchains, "..."))
 
-  tree <- canopy2:::initialize_tree(seedling = (chain + seed),
+  tree <- initialize_tree(seedling = (chain + seed),
                                     K=K,
                                     Rs=Rs,
                                     S=S,
@@ -23,6 +23,8 @@ MH_within_Gibbs<-function(chain, K, nchains, niter, thin, niter.thin, burn.len,
                                     Xb=Xb,
                                     Xs=Xs,
                                     alpha=alpha,
+                                    beta=beta,
+                                    kappa=kappa,
                                     tau=tau)
   tree.list <- list()
   accept <- numeric() # Initialize an empty numeric vector to store acceptance values
@@ -32,15 +34,15 @@ MH_within_Gibbs<-function(chain, K, nchains, niter, thin, niter.thin, burn.len,
     tosample <- sample.int(1, n = 3)
 
     if (tosample == 1) {
-      sampZout <- canopy2:::sampZ(tree,Rb, Xb, Rs, Xs, alpha, beta, kappa, tau)
+      sampZout <- canopy2:::sampZ(tree, Rb, Xb, Rs, Xs, alpha, beta, kappa, tau)
       tree <- sampZout[[1]]
       accept <- c(accept, sampZout[[2]])
     } else if (tosample == 2) {
-      sampPbout <- canopy2:::sampPb(tree,Rb, Xb, Rs, Xs, alpha, beta, kappa, tau)
+      sampPbout <- canopy2:::sampPb(tree, Rb, Xb, Rs, Xs, alpha, beta, kappa, tau)
       tree <- sampPbout[[1]]
       accept <- c(accept, sampPbout[[2]])
     } else {
-      sampPsout <- canopy2:::sampPs(tree,Rb, Xb, Rs, Xs, alpha, beta, kappa, tau)
+      sampPsout <- canopy2:::sampPs(tree, Rb, Xb, Rs, Xs, alpha, beta, kappa, tau)
       tree <- sampPsout[[1]]
       accept <- c(accept, sampPsout[[2]])
     }
