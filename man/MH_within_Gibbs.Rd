@@ -4,7 +4,24 @@
 \alias{MH_within_Gibbs}
 \title{Internal function}
 \usage{
-MH_within_Gibbs(chain, K, seed = 8675309)
+MH_within_Gibbs(
+  chain,
+  K,
+  nchains,
+  niter,
+  thin,
+  niter.thin,
+  burn.len,
+  Rs,
+  Xs,
+  Rb,
+  Xb,
+  S,
+  N,
+  alpha,
+  tau,
+  seed = 8675309
+)
 }
 \description{
 Gibbs with nested Metropolis-Hastings. See Alg. 2 in the main text for

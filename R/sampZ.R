@@ -1,7 +1,7 @@
 #' Internal function
-#' 
-#' Sample the clonal configuration matrix, Z, using Metropolis Hastings (an 
-#' accept reject algorithm). See Alg. 1 in the main text for further details. 
+#'
+#' Sample the clonal configuration matrix, Z, using Metropolis Hastings (an
+#' accept reject algorithm). See Alg. 1 in the main text for further details.
 #'
 #' @examples \dontrun{
 #' sim.tree<-initialize_tree(seedling=8675309)
@@ -9,7 +9,8 @@
 #' }
 #' @keywords internal
 
-sampZ=function(tree,...){
+sampZ=function(tree, Rb, Xb, Rs, Xs, alpha, beta, kappa, tau, ...){
+  accept<-c()
   M = nrow(tree$snv) # number of mutations
   for(i in 1:M){ # Update each mutation through a loop
     snv.new = tree$snv
@@ -20,7 +21,7 @@ sampZ=function(tree,...){
     tree.new=tree
     tree.new$snv=snv.new
     tree.new$Z=getZ(tree.new)
-    
+
     tree.new$Post=getPost(tree.new, Rb, Xb, Rs, Xs, alpha, beta, kappa, tau)
     r=exp(tree.new$Post-tree$Post)
     if(r>= stats::runif(1)){

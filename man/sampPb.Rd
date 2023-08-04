@@ -4,7 +4,7 @@
 \alias{sampPb}
 \title{Internal function}
 \usage{
-sampPb(tree, ...)
+sampPb(tree, Rb, Xb, Rs, Xs, alpha, beta, kappa, tau, ...)
 }
 \description{
 Sample the bulk sample to clone assignment matrix, Pb, using Metropolis

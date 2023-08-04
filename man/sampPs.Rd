@@ -4,7 +4,7 @@
 \alias{sampPs}
 \title{Internal function}
 \usage{
-sampPs(tree, ...)
+sampPs(tree, Rb, Xb, Rs, Xs, alpha, beta, kappa, tau, ...)
 }
 \description{
 Sample the single-cell to clone assignment matrix, Ps, using Metropolis

@@ -1,7 +1,7 @@
 #' Internal function
 #'
 #' Detect the user's operating system (OS).
-#' 
+#'
 #' See this link for further details:
 #' https://www.r-bloggers.com/identifying-the-os-from-r/
 #'

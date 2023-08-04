@@ -165,11 +165,13 @@ get_trees<-function(Rs, Rb, Xs, Xb, alpha, beta, kappa, tau,
   if (pburn<0 | pburn>=1 | !is.numeric(pburn)){
     stop("pburn must be between 0 (inclusive) and 1 (exclusive)")
   }
-  if (length(ncores)!=1){
+  if (!(length(ncores)%in%c(0,1))){
     stop("ncores must be of length 1")
   }
-  if (ncores <= 0 | !is.numeric(ncores) | ncores!=round(ncores)){
-    stop("ncores must be a positive integer")
+  if (!is.null(ncores)){
+    if(ncores <= 0 | !is.numeric(ncores) | ncores!=round(ncores)){
+      stop("ncores must be a positive integer")
+    }
   }
   if(is.null(ncores)){
     ncores<-1/2*parallelly::availableCores()
@@ -225,15 +227,22 @@ get_trees<-function(Rs, Rb, Xs, Xb, alpha, beta, kappa, tau,
       parallel::clusterExport(NULL, c('initialsnv','getZ','logdBetaBinom','getPost'))
       parallel::clusterEvalQ(NULL, {library(stats); library(ape); library(DirichletReg)})
       out.mcmc<-parallel::parLapply(NULL, 1:nchains,
-                                    function(chain) MH_within_Gibbs(chain),
-                                    K=K, seed=seed)
+                function(chain) canopy2:::MH_within_Gibbs(chain, K, nchains,
+                                                          niter, thin,
+                                                          niter.thin, burn.len,
+                                                          Rs, Xs, Rb, Xb, S, N,
+                                                          alpha, tau, seed))
       parallel::stopCluster(cl)
     }
 
     # If Unix-based system (e.g, Darwin (macOS), Linux)
     else{
-      out.mcmc <- parallel::mclapply(1:nchains, MH_within_Gibbs, mc.cores=ncores,
-                                     K=K, seed=seed)
+      out.mcmc <- parallel::mclapply(1:nchains, canopy2:::MH_within_Gibbs,
+                                     mc.cores=ncores, chain=chain, K=K,
+                                     nchains=nchains, niter=niter, thin=thin,
+                                     niter.thin=niter.thin, burn.len,
+                                     Rs=Rs, Xs=Xs, Rb=Rb, Xb=Xb, S=S, N=N,
+                                     alpha=alpha, tau=tau, seed=seed)
     }
 
     samples.out<-c(samples.out,out.mcmc)

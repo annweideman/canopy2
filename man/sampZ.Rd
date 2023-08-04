@@ -4,7 +4,7 @@
 \alias{sampZ}
 \title{Internal function}
 \usage{
-sampZ(tree, ...)
+sampZ(tree, Rb, Xb, Rs, Xs, alpha, beta, kappa, tau, ...)
 }
 \description{
 Sample the clonal configuration matrix, Z, using Metropolis Hastings (an
