@@ -11,10 +11,4 @@ Sample the single-cell to clone assignment matrix, Ps, using Metropolis
 Hastings (an accept reject algorithm). See Alg. 1 in the main text for
 further details.
 }
-\examples{
-\dontrun{
-sim.tree<-initialize_tree(seedling=8675309)
-sampPs(tree=sim.tree)
-}
-}
 \keyword{internal}

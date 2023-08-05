@@ -2,9 +2,6 @@
 #'
 #' Initialize phylogenetic tree.
 #'
-#' @examples \dontrun{
-#' initialize_tree(seedling=8675309, K=4)
-#' }
 #' @keywords internal
 initialize_tree<-function(seedling, K, Rs, S, Rb, N, Xb, Xs, alpha, beta, kappa, tau){
 

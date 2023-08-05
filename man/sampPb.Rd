@@ -11,10 +11,4 @@ Sample the bulk sample to clone assignment matrix, Pb, using Metropolis
 Hastings (an accept reject algorithm). See Alg. 1 in the main text for
 further details.
 }
-\examples{
-\dontrun{
-sim.tree<-initialize_tree(seedling=8675309)
-sampPb(tree=sim.tree)
-}
-}
 \keyword{internal}

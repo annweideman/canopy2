@@ -3,10 +3,6 @@
 #' Sample the clonal configuration matrix, Z, using Metropolis Hastings (an
 #' accept reject algorithm). See Alg. 1 in the main text for further details.
 #'
-#' @examples \dontrun{
-#' sim.tree<-initialize_tree(seedling=8675309)
-#' sampZ(tree=sim.tree)
-#' }
 #' @keywords internal
 
 sampZ=function(tree, Rb, Xb, Rs, Xs, alpha, beta, kappa, tau, ...){

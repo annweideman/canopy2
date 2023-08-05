@@ -224,14 +224,17 @@ get_trees<-function(Rs, Rb, Xs, Xb, alpha, beta, kappa, tau,
     if(os=="windows"){
       cl <- parallel::makePSOCKcluster(ncores)
       parallel::setDefaultCluster(cl)
-      parallel::clusterExport(NULL, c('initialsnv','getZ','logdBetaBinom','getPost'))
+      parallel::clusterExport(NULL, c('initialsnv','getZ','logdBetaBinom','getPost',
+                                      'K', 'nchains', 'niter', 'thin', 'niter.thin',
+                                      'burn.len','Rs', 'Xs', 'Rb', 'Xb', 'S', 'N',
+                                      'alpha', 'tau', 'seed'))
       parallel::clusterEvalQ(NULL, {library(stats); library(ape); library(DirichletReg)})
-      out.mcmc<-parallel::parLapply(NULL, 1:nchains,
-                function(chain) canopy2:::MH_within_Gibbs(chain, K, nchains,
-                                                          niter, thin,
-                                                          niter.thin, burn.len,
-                                                          Rs, Xs, Rb, Xb, S, N,
-                                                          alpha, tau, seed))
+      out.mcmc<-parallel::parLapply(NULL, 1:nchains, function(x) canopy2:::MH_within_Gibbs(chain=x,
+                                    K=K, nchains=nchains, niter=niter, thin=thin,
+                                    niter.thin=niter.thin, burn.len=burn.len,
+                                    Rs=Rs, Xs=Xs, Rb=Rb, Xb=Xb, S=S, N=N,
+                                    alpha=alpha, beta=beta, kappa=kappa, tau=tau, seed=seed))
+
       parallel::stopCluster(cl)
     }
 

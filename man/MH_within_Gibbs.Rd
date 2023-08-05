@@ -19,6 +19,8 @@ MH_within_Gibbs(
   S,
   N,
   alpha,
+  beta,
+  kappa,
   tau,
   seed = 8675309
 )
@@ -26,10 +28,5 @@ MH_within_Gibbs(
 \description{
 Gibbs with nested Metropolis-Hastings. See Alg. 2 in the main text for
 further details.
-}
-\examples{
-\dontrun{
-MH_within_Gibbs(chain=1, K=4, seed=8675309)
-}
 }
 \keyword{internal}

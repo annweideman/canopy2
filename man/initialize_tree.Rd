@@ -9,9 +9,4 @@ initialize_tree(seedling, K, Rs, S, Rb, N, Xb, Xs, alpha, beta, kappa, tau)
 \description{
 Initialize phylogenetic tree.
 }
-\examples{
-\dontrun{
-initialize_tree(seedling=8675309, K=4)
-}
-}
 \keyword{internal}

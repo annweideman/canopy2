@@ -4,10 +4,6 @@
 #' Hastings (an accept reject algorithm). See Alg. 1 in the main text for
 #' further details.
 #'
-#' @examples \dontrun{
-#' sim.tree<-initialize_tree(seedling=8675309)
-#' sampPb(tree=sim.tree)
-#' }
 #' @keywords internal
 
 sampPb=function(tree, Rb, Xb, Rs, Xs, alpha, beta, kappa, tau, ...){

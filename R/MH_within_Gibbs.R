@@ -3,13 +3,10 @@
 #' Gibbs with nested Metropolis-Hastings. See Alg. 2 in the main text for
 #' further details.
 #'
-#' @examples \dontrun{
-#' MH_within_Gibbs(chain=1, K=4, seed=8675309)
-#' }
 #' @keywords internal
 #'
 MH_within_Gibbs<-function(chain, K, nchains, niter, thin, niter.thin, burn.len,
-                          Rs, Xs, Rb, Xb, S, N, alpha, tau, seed=8675309){
+                          Rs, Xs, Rb, Xb, S, N, alpha, beta, kappa, tau, seed=8675309){
 
   # Print message to console
   print(paste("Running chain", chain, "out of", nchains, "..."))
