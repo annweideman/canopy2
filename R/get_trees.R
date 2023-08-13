@@ -222,15 +222,15 @@ get_trees<-function(Rs, Rb, Xs, Xb, alpha, beta, kappa, tau,
     # Note: Windows doesn't supporting forking, so must register cluster
     # https://stackoverflow.com/questions/17196261
     if(os=="windows"){
-      cl <- parallel::makePSOCKcluster(1)
+      cl <- parallel::makePSOCKcluster(ncores)
       parallel::setDefaultCluster(cl)
-      parallel::clusterExport(NULL, list('initialsnv','getZ','logdBetaBinom','getPost',
+      parallel::clusterExport(cl, list('initialsnv','getZ','logdBetaBinom','getPost',
                                       'K', 'nchains', 'niter', 'thin', 'niter.thin',
                                       'burn.len','Rs', 'Xs', 'Rb', 'Xb', 'S', 'N',
                                       'alpha', 'beta', 'kappa', 'tau', 'seed'),
                               envir = environment())
-      parallel::clusterEvalQ(NULL, {library(stats); library(ape); library(DirichletReg)})
-      out.mcmc<-parallel::parLapply(NULL, 1:nchains, function(x) canopy2:::MH_within_Gibbs(chain=x,
+      parallel::clusterEvalQ(cl, {library(stats); library(ape); library(DirichletReg)})
+      out.mcmc<-parallel::parLapply(cl, 1:nchains, function(x) canopy2:::MH_within_Gibbs(chain=x,
                                     K=K, nchains=nchains, niter=niter, thin=thin,
                                     niter.thin=niter.thin, burn.len=burn.len,
                                     Rs=Rs, Xs=Xs, Rb=Rb, Xb=Xb, S=S, N=N,
