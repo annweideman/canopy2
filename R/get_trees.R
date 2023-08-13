@@ -222,30 +222,32 @@ get_trees<-function(Rs, Rb, Xs, Xb, alpha, beta, kappa, tau,
     # Note: Windows doesn't supporting forking, so must register cluster
     # https://stackoverflow.com/questions/17196261
     if(os=="windows"){
-      cl <- parallel::makePSOCKcluster(ncores)
+      cl <- parallel::makePSOCKcluster(1)
       parallel::setDefaultCluster(cl)
-      parallel::clusterExport(NULL, c('initialsnv','getZ','logdBetaBinom','getPost',
+      parallel::clusterExport(NULL, list('initialsnv','getZ','logdBetaBinom','getPost',
                                       'K', 'nchains', 'niter', 'thin', 'niter.thin',
                                       'burn.len','Rs', 'Xs', 'Rb', 'Xb', 'S', 'N',
-                                      'alpha', 'tau', 'seed'))
+                                      'alpha', 'beta', 'kappa', 'tau', 'seed'),
+                              envir = environment())
       parallel::clusterEvalQ(NULL, {library(stats); library(ape); library(DirichletReg)})
       out.mcmc<-parallel::parLapply(NULL, 1:nchains, function(x) canopy2:::MH_within_Gibbs(chain=x,
                                     K=K, nchains=nchains, niter=niter, thin=thin,
                                     niter.thin=niter.thin, burn.len=burn.len,
                                     Rs=Rs, Xs=Xs, Rb=Rb, Xb=Xb, S=S, N=N,
-                                    alpha=alpha, beta=beta, kappa=kappa, tau=tau, seed=seed))
+                                    alpha=alpha, beta=beta, kappa=kappa, tau=tau,
+                                    seed=seed))
 
       parallel::stopCluster(cl)
     }
 
     # If Unix-based system (e.g, Darwin (macOS), Linux)
     else{
-      out.mcmc <- parallel::mclapply(1:nchains, canopy2:::MH_within_Gibbs,
-                                     mc.cores=ncores, chain=chain, K=K,
-                                     nchains=nchains, niter=niter, thin=thin,
-                                     niter.thin=niter.thin, burn.len,
+      out.mcmc <- parallel::mclapply(1:nchains, function(x) canopy2:::MH_within_Gibbs(
+                                     chain=x, K=K, nchains=nchains, niter=niter,
+                                     thin=thin, niter.thin=niter.thin, burn.len,
                                      Rs=Rs, Xs=Xs, Rb=Rb, Xb=Xb, S=S, N=N,
-                                     alpha=alpha, tau=tau, seed=seed)
+                                     alpha=alpha, beta=beta, kappa=kappa, tau=tau,
+                                     seed=seed), mc.cores=ncores)
     }
 
     samples.out<-c(samples.out,out.mcmc)

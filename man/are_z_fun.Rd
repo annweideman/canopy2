@@ -54,7 +54,7 @@ get.trees.out<-get_trees(Rs=Rs, Rb=Rb, Xs=Xs, Xb=Xb,
                         alpha=param.out$alpha, beta=param.out$beta,
                         kappa=1, tau=999, Klist=3:5,
                         niter=10000, nchains=20, thin=20, pburn=0.5,
-                        seed=8675309)
+                        ncores=4, seed=8675309)
 
 # Get best tree across all chains and subclones via DIC
 best.tree.out<-get_best_tree(get.trees.out)
