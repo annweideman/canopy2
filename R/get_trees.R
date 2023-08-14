@@ -208,53 +208,53 @@ get_trees<-function(Rs, Rb, Xs, Xb, alpha, beta, kappa, tau,
 
   samples.out<-list()
 
-  # Loop over number of subclones
-  for(K in Klist){
+  # Parallel processing across chains
+  # Get operating system
+  os<-canopy2:::get_os()
 
-    # Print message to console
-    print(paste("Sample in tree space with", K, "subclones"))
+  # Get all possible combinations of number of chains and number of subclones
+  grid.iter<-expand.grid(1:nchains,Klist)
 
-    # Parallel processing across chains
-    # Get operating system
-    os<-get_os()
-
-    # If Windows
-    # Note: Windows doesn't supporting forking, so must register cluster
-    # https://stackoverflow.com/questions/17196261
-    if(os=="windows"){
-      cl <- parallel::makePSOCKcluster(ncores)
-      parallel::setDefaultCluster(cl)
-      parallel::clusterExport(cl, list('initialsnv','getZ','logdBetaBinom','getPost',
-                                      'K', 'nchains', 'niter', 'thin', 'niter.thin',
-                                      'burn.len','Rs', 'Xs', 'Rb', 'Xb', 'S', 'N',
-                                      'alpha', 'beta', 'kappa', 'tau', 'seed'),
-                              envir = environment())
-      parallel::clusterEvalQ(cl, {library(stats); library(ape); library(DirichletReg)})
-      out.mcmc<-parallel::parLapply(cl, 1:nchains, function(x) canopy2:::MH_within_Gibbs(chain=x,
-                                    K=K, nchains=nchains, niter=niter, thin=thin,
-                                    niter.thin=niter.thin, burn.len=burn.len,
-                                    Rs=Rs, Xs=Xs, Rb=Rb, Xb=Xb, S=S, N=N,
-                                    alpha=alpha, beta=beta, kappa=kappa, tau=tau,
-                                    seed=seed))
-
-      parallel::stopCluster(cl)
-    }
-
-    # If Unix-based system (e.g, Darwin (macOS), Linux)
-    else{
-      out.mcmc <- parallel::mclapply(1:nchains, function(x) canopy2:::MH_within_Gibbs(
-                                     chain=x, K=K, nchains=nchains, niter=niter,
-                                     thin=thin, niter.thin=niter.thin, burn.len,
-                                     Rs=Rs, Xs=Xs, Rb=Rb, Xb=Xb, S=S, N=N,
-                                     alpha=alpha, beta=beta, kappa=kappa, tau=tau,
-                                     seed=seed), mc.cores=ncores)
-    }
-
-    samples.out<-c(samples.out,out.mcmc)
-
+  # If Darwin (macOS)
+  # Note: this function CANNOT be used on a Linux cluster, but it can be used
+  # on non-cluster Unix-based systems if it of interest. In this case, Linux
+  # systems will default to the else statement, but it is technically faster
+  # to fork if you are using a Linux-based system that is not on a cluster.
+  if(os=="Darwin"){
+    out.mcmc <- parallel::mclapply(1:nrow(grid.iter), function(x)
+    {canopy2:::MH_within_Gibbs(chain=grid.iter[x,1], K=grid.iter[x,2],
+                               nchains=nchains, niter=niter, thin=thin,
+                               niter.thin=niter.thin, burn.len=burn.len,
+                               Rs=Rs, Xs=Xs, Rb=Rb, Xb=Xb, S=S, N=N,
+                               alpha=alpha, beta=beta, kappa=kappa, tau=tau,
+                               seed=seed)}, mc.cores=4)
   }
 
-  final.out<-list(samples=samples.out,
+  # If Windows or Linux cluster
+  # Note: Forking not supported in these cases, so must register cluster
+  # https://www.oreilly.com/library/view/parallel-r/9781449317850/ch04.html
+  # Can check if forking is supported with command parallelly::supportsMulticore()
+  else{
+    cl <- parallel::makePSOCKcluster(ncores)
+    parallel::setDefaultCluster(cl)
+    parallel::clusterExport(cl, list('initialsnv','getZ','logdBetaBinom','getPost',
+                                     'nchains','grid.iter', 'niter', 'thin', 'niter.thin',
+                                     'burn.len','Rs', 'Xs', 'Rb', 'Xb', 'S', 'N',
+                                     'alpha', 'beta', 'kappa', 'tau', 'seed'),
+                            envir = environment())
+    parallel::clusterEvalQ(cl, {library(stats); library(ape); library(DirichletReg)})
+    out.mcmc<-parallel::parLapply(cl, 1:nrow(grid.iter), function(x)
+      canopy2:::MH_within_Gibbs(chain=grid.iter[x,1], K=grid.iter[x,2],
+                                nchains=nchains, niter=niter, thin=thin,
+                                niter.thin=niter.thin, burn.len=burn.len,
+                                Rs=Rs, Xs=Xs, Rb=Rb, Xb=Xb, S=S, N=N,
+                                alpha=alpha, beta=beta, kappa=kappa, tau=tau,
+                                seed=seed))
+    parallel::stopCluster(cl)
+  }
+
+
+  final.out<-list(samples=out.mcmc,
                   N=N,
                   S=S,
                   M=M,
