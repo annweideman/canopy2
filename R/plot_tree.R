@@ -226,9 +226,9 @@ plot_tree <- function(tree, save.muts=F, save.plot=F,
     }
   })
 
-  vec<-seq(0.1,1,0.1)
+  temp.df<-data.frame(x = seq(0.1,1,0.1), y = seq(0.1,1,0.1), z=seq(0.1,1,0.1))
   ggp<-ggplot2::ggplot(temp.df,
-                       ggplot2::aes(x = vec, y = vec, fill=vec)) +
+                       ggplot2::aes(x = x, y = y, fill=z)) +
     ggplot2::geom_tile() + viridis::scale_fill_viridis(option="turbo", limits=c(0,1)) +
     ggplot2::theme(legend.position = c(0.45,.5),
                    legend.direction="horizontal",
