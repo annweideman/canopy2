@@ -18,7 +18,7 @@
 #' Z is quantified by finding the minimum absolute distance between
 #' the inference and all permutations of the truth by 1) computing the distance
 #' metric, 2) computing extra error from additional columns, and 3) estimating
-#' the ARE for each component as a combination of the error from steps 1) and 2).
+#' the ARE for Z as a combination of the error from steps 1) and 2).
 #'
 #' @examples
 #' # Simulate alternative and total read counts for bulk and single-cell data
@@ -51,11 +51,11 @@
 #' best.tree.out<-get_best_tree(get.trees.out)
 #'
 #' # Compute absolute reconstruction error for Z
-#' are_z_fun(true.Z=sims.out$true.tree$Z, inferred.Z=best.tree.out$tree$Z)
+#' error_z(true.Z=sims.out$true.tree$Z, inferred.Z=best.tree.out$tree$Z)
 #'
 #' @export
 
-are_z_fun <- function(true.Z, inferred.Z){
+error_z <- function(true.Z, inferred.Z){
 
   # check arguments
   if (!inherits(true.Z, "matrix")){
@@ -72,18 +72,6 @@ are_z_fun <- function(true.Z, inferred.Z){
 
   if(!all(inferred.Z %in% 0:1)){
     stop("inferred.Z must be a binary matrix")
-  }
-
-  if (!(all(rownames(true.Z) == rownames(inferred.Z)))) {
-    stop("Rownames for true.Z and inferred.Z are not identical")
-  }
-
-  if (!(all(colnames(true.Z) == colnames(inferred.Z)))) {
-    stop("Colnames for true.Z and inferred.Z are not identical")
-  }
-
-  if (!(identical(dim(true.Z), dim(inferred.Z)))) {
-    stop("Dimensions for true.Z and inferred.Z are not identical")
   }
 
   # Check for duplicated columns in inferred Z and remove if present ONLY
