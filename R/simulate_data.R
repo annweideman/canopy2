@@ -326,24 +326,6 @@ simulate_data<-function(N, S, M, alpha, beta, kappa=1, tau=999, Ktrue,
     }
   }
 
-  # Sort Ps to aggregate 1's for better visualization
-  temp.mat<-matrix(NA,nrow=nrow(tree$Ps),ncol=1)
-  rownames(temp.mat)<-rownames(tree$Ps)
-  id.ones<-lapply(1:nrow(tree$Ps),function(x) which(tree$Ps[x,]==1))
-
-  # Generate mini binary matrices that are concatenated to create final matrix
-  for(list.id in length(id.ones):1){
-    temp.mat0<-matrix(0,nrow=nrow(tree$Ps),ncol=length(id.ones[[list.id]]))
-    temp.mat0[list.id,]<-1
-    colnames(temp.mat0)<-names(id.ones[[list.id]])
-    temp.mat<-cbind(temp.mat,temp.mat0)
-  }
-
-  # Remove vector of NAs
-  temp.mat<-temp.mat[,-1]
-  # Replace Ps in final tree with new Ps that has 1's along main diagonal
-  tree$Ps<-temp.mat
-
   # Generate random variates from a beta-poisson to simulate gene
   # expression data
   G <- t(sapply(1:length(alpha), function(i)
