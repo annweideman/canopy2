@@ -1,7 +1,7 @@
 https://github.com/annweideman/canopy2/assets/52984250/6bd2366d-ceff-4d39-a0a1-aefb8611b8e8
 
 # Important Note (added on 12/3/23): 
-If you receive the following error:
+If you receive the following error while using the `get_gene_expression()` function, which internally uses `biomaRt::useEnsembl()`:
 ```
 Error in `collect()`:
 ! Failed to collect lazy table.
@@ -13,7 +13,7 @@ Problematic argument:
 Run `rlang::last_trace()` to see where the error occurred.
 ```
 
-Run the following:
+This is due to a bug relating to BiocFileCache compatibility with the new version dbplyr. To correct, run the following:
 
 ```
 library(BiocManager)
