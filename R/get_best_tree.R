@@ -276,7 +276,7 @@ get_best_tree<-function(get.trees.out,
   # Store minimum DIC
   min.DIC<-DIC.list[id.min.DIC]
 
-  grDevices::graphics.off()
+  #grDevices::graphics.off()
 
   # Plot DIC vs number of subclones to visually locate optimal K (occurs at min DIC)
   plot(Klist, DIC.list,

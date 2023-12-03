@@ -67,7 +67,7 @@ get_diagnostics<-function(get.trees.out, project=NULL, outpath=NULL){
     }
   }
 
-  if(grDevices::dev.cur() > 1) grDevices::dev.off()
+  #if(grDevices::dev.cur() > 1) grDevices::dev.off()
 
   samples<-get.trees.out$samples
   nchains<-get.trees.out$nchains
@@ -114,12 +114,14 @@ get_diagnostics<-function(get.trees.out, project=NULL, outpath=NULL){
   iters<-seq(1,length(p1),4)
   for (i in iters) {
     if(i==max(iters)){
-      do.call(gridExtra::grid.arrange, c(lapply(i:length(p1), function(x) p1[[x]]),
+      p<-do.call(gridExtra::grid.arrange, c(lapply(i:length(p1), function(x) p1[[x]]),
                                 list(nrow=2,ncol=2)))
+      print(p)
     }
     else{
-      do.call(gridExtra::grid.arrange, list(p1[[i]],p1[[i+1]],p1[[i+2]],p1[[i+3]],
+      p<-do.call(gridExtra::grid.arrange, list(p1[[i]],p1[[i+1]],p1[[i+2]],p1[[i+3]],
                                    nrow=2,ncol=2))
+      print(p)
     }
   }
   if(is.null(outpath)==F){grDevices::dev.off()}
