@@ -1,5 +1,23 @@
 https://github.com/annweideman/canopy2/assets/52984250/6bd2366d-ceff-4d39-a0a1-aefb8611b8e8
 
+# Important Note (added on 12/3/23): 
+If you receive the following error:
+``Error in `collect()`:
+! Failed to collect lazy table.
+Caused by error in `db_collect()`:
+! Arguments in `...` must be used.
+Problematic argument:
+ ..1 = Inf
+ Did you misspell an argument name?
+Run `rlang::last_trace()` to see where the error occurred.``
+
+Run the following:
+
+``library(BiocManager)
+install("BiocFileCache")``
+
+[https://support.bioconductor.org/p/9154901/](https://stat.ethz.ch/pipermail/bioc-devel/2023-October/020003.html)
+
 # Method
 Canopy2: tumor phylogeny inference using bulk DNA and single-cell RNA sequencing
 
