@@ -63,7 +63,7 @@ get_diagnostics<-function(get.trees.out, project=NULL, outpath=NULL){
   }
   if(!is.null(outpath)){
     if(!file.exists(outpath)){
-    stop("The location specified for outpath is not valid.")
+      stop("The location specified for outpath is not valid.")
     }
   }
 
@@ -88,11 +88,11 @@ get_diagnostics<-function(get.trees.out, project=NULL, outpath=NULL){
     chain.mat<-matrix(unlist(posteriors),ncol=nchains)
     colnames(chain.mat)<-chain.names
     bayesplot::mcmc_areas(chain.mat, pars=chain.names, prob = 0.95,
-               area_method="scaled height") +
-               ggplot2::labs(title = paste0("Joint posterior densities for K=",K),
-                                    subtitle = "(medians and 95% HPD intervals)")+
-               ggplot2::theme(plot.title = ggplot2::element_text(size=13,hjust=0.5),
-                              plot.subtitle = ggplot2::element_text(hjust=0.5),
+                          area_method="scaled height") +
+      ggplot2::labs(title = paste0("Joint posterior densities for K=",K),
+                    subtitle = "(medians and 95% HPD intervals)")+
+      ggplot2::theme(plot.title = ggplot2::element_text(size=13,hjust=0.5),
+                     plot.subtitle = ggplot2::element_text(hjust=0.5),
                      plot.caption = ggplot2::element_text(color="blue", hjust=0.5))
 
   }
@@ -102,9 +102,9 @@ get_diagnostics<-function(get.trees.out, project=NULL, outpath=NULL){
   i<-1
   counter<-1
   for(K in Klist){
-      p1[[i]]<-plot.posteriors(post.list[counter:(counter+nchains-1)], K, nchains)
-      i<-i+1
-      counter<-counter+nchains
+    p1[[i]]<-plot.posteriors(post.list[counter:(counter+nchains-1)], K, nchains)
+    i<-i+1
+    counter<-counter+nchains
   }
 
   if(!is.null(outpath)){
@@ -114,13 +114,14 @@ get_diagnostics<-function(get.trees.out, project=NULL, outpath=NULL){
   iters<-seq(1,length(p1),4)
   for (i in iters) {
     if(i==max(iters)){
-      do.call(gridExtra::grid.arrange, c(lapply(i:length(p1), function(x) p1[[x]]),
-                                list(nrow=2,ncol=2)))
+      p2<-do.call(gridExtra::grid.arrange, c(lapply(i:length(p1), function(x) p1[[x]]),
+                                             list(nrow=2,ncol=2)))
     }
     else{
-      do.call(gridExtra::grid.arrange, list(p1[[i]],p1[[i+1]],p1[[i+2]],p1[[i+3]],
-                                   nrow=2,ncol=2))
+      p2<-do.call(gridExtra::grid.arrange, list(p1[[i]],p1[[i+1]],p1[[i+2]],p1[[i+3]],
+                                                nrow=2,ncol=2))
     }
+    p2
   }
   if(is.null(outpath)==F){grDevices::dev.off()}
 
@@ -136,7 +137,7 @@ get_diagnostics<-function(get.trees.out, project=NULL, outpath=NULL){
   graphics::par(mfrow = c(2, 2), mar=c(4,4,4,4))
   for (K in Klist) {
     coda::traceplot(Map(coda::as.mcmc,post.list[counter:(counter+nchains-1)]),ylab="Posterior")
-              #main=bquote("Trace plot for posterior after"~.(pburn*100)*"% burn-in"))
+    #main=bquote("Trace plot for posterior after"~.(pburn*100)*"% burn-in"))
     graphics::mtext(bquote("Trace plot for posterior after"~.(pburn*100)*"% burn-in")
                     ,side=3,line=-2,outer=TRUE)
     graphics::mtext(side=3, line=0.5, cex=1, paste0("K = ",K,""), col="blue")
@@ -158,20 +159,20 @@ get_diagnostics<-function(get.trees.out, project=NULL, outpath=NULL){
   start<-1
   end<-(Klist-(min(Klist)-1))*nchains
   for (K in Klist){
-      graphics::par(mfrow = c(1, 4),oma = c(2, 0, 4, 0))
-      for(i in start:end[count]){
-        stats::acf(post.list[[i]],
-                   main=paste("Chain", eval(parse(text="chain.id"))))
-        graphics::mtext(side=3, line=1.5, cex=1.2,
-                        bquote("Lag ACF after"~.(pburn*100)*"% burn-in"),
-                        outer=T)
-        graphics::mtext(side=3, line=0.5, cex=1.1,
-                        paste0("(K = ",K,")"), col="blue", outer=T)
-        chain.id<-chain.id+1
-      }
-      start<-end[count]+1
-      count<-count+1
-      chain.id<-1
+    graphics::par(mfrow = c(1, 4),oma = c(2, 0, 4, 0))
+    for(i in start:end[count]){
+      stats::acf(post.list[[i]],
+                 main=paste("Chain", eval(parse(text="chain.id"))))
+      graphics::mtext(side=3, line=1.5, cex=1.2,
+                      bquote("Lag ACF after"~.(pburn*100)*"% burn-in"),
+                      outer=T)
+      graphics::mtext(side=3, line=0.5, cex=1.1,
+                      paste0("(K = ",K,")"), col="blue", outer=T)
+      chain.id<-chain.id+1
+    }
+    start<-end[count]+1
+    count<-count+1
+    chain.id<-1
   }
 
   if(is.null(outpath)==F){grDevices::dev.off()}
