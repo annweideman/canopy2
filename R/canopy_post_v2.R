@@ -36,11 +36,11 @@ canopy_post_v2 <- function(sampchain, projectname, K, numchain, burnin, thin,
   }
   if (!is.null(sampchain[[1]][[1]][[1]]$cna)) {
     for (i in 1:length(samptreethin)) {
-      samptreethin[[i]] <- sortcna(samptreethin[[i]], C)
+      samptreethin[[i]] <- Canopy::sortcna(samptreethin[[i]], C)
     }
   }
   for (i in 1:length(samptreethin)) {
-    samptreethin[[i]]$clonalmut <- getclonalcomposition(samptreethin[[i]])
+    samptreethin[[i]]$clonalmut <- Canopy::getclonalcomposition(samptreethin[[i]])
   }
   config <- rep(NA, length(samptreethin))
   config[1] <- 1
@@ -59,7 +59,7 @@ canopy_post_v2 <- function(sampchain, projectname, K, numchain, burnin, thin,
       categ <- categ + 1
     }
   }
-  z.temp <- (samptreethin.lik - mean(samptreethin.lik))/sd(samptreethin.lik)
+  z.temp <- (samptreethin.lik - mean(samptreethin.lik))/stats::sd(samptreethin.lik)
   samptreethin <- samptreethin[z.temp <= 1.5 & z.temp >= -1.5]
   samptreethin.lik <- samptreethin.lik[z.temp <= 1.5 & z.temp >=
                                          -1.5]
@@ -76,7 +76,7 @@ canopy_post_v2 <- function(sampchain, projectname, K, numchain, burnin, thin,
     config.summary[i, 3] <- round(max(samptreethin.lik[which(config ==
                                                                configi)]), 2)
   }
-  
+
   for (treei in 1:length(samptreethin)) {
     output.tree <- samptreethin[[treei]]
     output.tree.Z <- output.tree$Z[, 2:ncol(output.tree$Z),

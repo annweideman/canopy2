@@ -36,16 +36,20 @@
 #' data("GBM10_postproc")
 #'
 #' # Run Canopy2 to get list of phylogenetic trees corresponding to all chains
-#' # and all subclones
+#' # and all subclones.
+#' # Note: this is written to quickly compile for demonstration purposes, as we
+#' # know the optimal number of subclones is 6. In practice, we would attempt a
+#' # larger range of subclones (e.g., Klist=3:10) and a larger number of
+#' # iterations and chains (e.g., niter=50000 and nchains=10).
 #' get.trees.out<-get_trees(Rs=GBM10_postproc@Rs, Rb=GBM10_postproc@Rb,
 #'                          Xs=GBM10_postproc@Xs, Xb=GBM10_postproc@Xb,
 #'                          alpha=GBM10_postproc@param.est$alpha,
 #'                          beta=GBM10_postproc@param.est$beta, kappa=1,
-#'                          tau=999, Klist=4:6, niter=10000, nchains=20, thin=20,
-#'                          pburn=0.5, seed=8675309)
+#'                          tau=999, Klist=5:7, niter=5000, nchains=5, thin=20,
+#'                          pburn=0.2, seed=8675309)
 #'
 #' # Examine diagnostic plots
-#' get_diagnostics(get.trees.out=get.trees.out, project=NULL, outpath=NULL)
+#' get_diagnostics(get.trees.out=get.trees.out)
 #'
 #' @export
 
@@ -83,13 +87,11 @@ get_diagnostics<-function(get.trees.out, project=NULL, outpath=NULL){
   plot.posteriors<-function(posteriors, K, nchains){
 
     chain.names<-sapply(1:nchains, function(i) paste("Chain",i))
-    plot.title <- ggplot2::ggtitle("Joint posterior distributions",
-                                   "(medians and 95% HPD intervals)")
     chain.mat<-matrix(unlist(posteriors),ncol=nchains)
     colnames(chain.mat)<-chain.names
     bayesplot::mcmc_areas(chain.mat, pars=chain.names, prob = 0.95,
                           area_method="scaled height") +
-      ggplot2::labs(title = paste0("Joint posterior densities for K=",K),
+      ggplot2::labs(title = paste0("Joint log-posterior densities for K=",K),
                     subtitle = "(medians and 95% HPD intervals)")+
       ggplot2::theme(plot.title = ggplot2::element_text(size=13,hjust=0.5),
                      plot.subtitle = ggplot2::element_text(hjust=0.5),

@@ -50,10 +50,14 @@ Xb<-sims.out$Xb[param.out$id.g,] # bulk total read counts
 
 # Run Canopy2 to get list of phylogenetic trees corresponding to all chains
 # and all subclones
+# Note: this is written to quickly compile for demonstration purposes, as we
+# know the optimal number of subclones is 6. In practice, we would attempt a
+# larger range of subclones (e.g., Klist=3:10) and a larger number of
+# iterations and chains (e.g., niter=50000 and nchains=10).
 get.trees.out<-get_trees(Rs=Rs, Rb=Rb, Xs=Xs, Xb=Xb,
                         alpha=param.out$alpha, beta=param.out$beta,
                         kappa=1, tau=999, Klist=3:5,
-                        niter=10000, nchains=20, thin=20, pburn=0.5,
+                        niter=5000, nchains=5, thin=20, pburn=0.2,
                         ncores=4, seed=8675309)
 
 # Get best tree across all chains and subclones via DIC

@@ -55,18 +55,22 @@
 #' data("GBM10_postproc")
 #'
 #' # Run Canopy2 to get list of phylogenetic trees corresponding to all chains
-#' # and all subclones
+#' # and all subclones.
+#' # Note: this is written to quickly compile for demonstration purposes, as we
+#' # know the optimal number of subclones is 6. In practice, we would attempt a
+#' # larger range of subclones (e.g., Klist=3:10) and a larger number of
+#' # iterations and chains (e.g., niter=50000 and nchains=10).
 #' get.trees.out<-get_trees(Rs=GBM10_postproc@Rs, Rb=GBM10_postproc@Rb,
 #'                          Xs=GBM10_postproc@Xs, Xb=GBM10_postproc@Xb,
 #'                          alpha=GBM10_postproc@param.est$alpha,
 #'                          beta=GBM10_postproc@param.est$beta, kappa=1,
-#'                          tau=999, Klist=4:6, niter=10000, nchains=20, thin=20,
-#'                          pburn=0.5, ncores=4, seed=8675309)
+#'                          tau=999, Klist=5:7, niter=5000, nchains=5, thin=20,
+#'                          pburn=0.2, seed=8675309)
 #'
 #' # Examine diagnostic plots
-#' get_diagnostics(get.trees.out, project=NULL, outpath=NULL)
+#' get_diagnostics(get.trees.out)
 #'
-#' # Get best tree across all chains and subclones via DIC
+#' # Get best tree across all chains and subclones via BIC
 #' best.tree.out<-get_best_tree(get.trees.out)
 #'
 #' best.tree.out
@@ -175,6 +179,9 @@ get_trees<-function(Rs, Rb, Xs, Xb, alpha, beta, kappa, tau,
   }
   if(is.null(ncores)){
     ncores<-1/2*parallelly::availableCores()
+  }
+  if(ncores>parallelly::availableCores()){
+    ncores<-parallelly::availableCores()
   }
   if(ncores==1){
     print("Executing code in serial using one core. If parallelization is desired, see argument 'ncores'")

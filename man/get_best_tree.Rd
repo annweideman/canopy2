@@ -6,7 +6,6 @@
 \usage{
 get_best_tree(
   get.trees.out,
-  method = "spiegelhalter",
   save.muts = F,
   save.clones = F,
   save.plot = F,
@@ -17,10 +16,6 @@ get_best_tree(
 \arguments{
 \item{get.trees.out}{sample of phylogenetic trees output from function
 \code{get_trees()} of class \code{get_trees}.}
-
-\item{method}{type of DIC used for model selection and must be
-one of method \code{"spiegelhalter"} or \code{"gelman"}. Defaults to
-\code{"spiegelhalter"}.}
 
 \item{save.muts}{a logical indicating whether a text file containing all
 mutations along the branches should be saved. If \code{TRUE}, must specify
@@ -44,55 +39,69 @@ generated from \code{save.muts} and \code{save.plot}.}
 }
 \value{
 A list containing: \code{K}, a numeric corresponding to the optimal number of
-subclones occurring at the minimum DIC, \code{tree}, an object of class
+subclones occurring at the minimum BIC, \code{tree}, an object of class
 \code{"phylo"} representing the best phylogenetic tree corresponding to the
-optimal number of subclones (K), \code{branches.muts}, a matrix containing the
+optimal number of subclones \code{K}, \code{branches.muts}, a matrix containing the
 names of the mutations assigned to each branch along the tree,
 \code{clonals.muts}, a matrix containing the names of the mutations assigned
 to each subclone, \code{posteriors}, a numeric of posteriors corresponding to
-the final tree, \code{DIC}, a numeric corresponding to the minimum DIC across
+the final tree, \code{BIC}, a numeric corresponding to the minimum BIC across
 all subclones, and \code{acceptance.rate}, a numeric corresponding to the MCMC
 acceptance rate for the best tree.
 }
 \description{
-Produce the optimal configuration of the phylogenetic tree by using the
-deviance information criterion (DIC) computed via the
-Gelman \insertCite{gelman2003}{canopy2} or Spiegelhalter
-\insertCite{Spiegelhalter2002}{canopy2} definitions.
+Produce the optimal configuration of the phylogenetic tree by using a modified
+version of the Bayesian information criterion (BIC).
 }
 \details{
-DIC is computed by two definitions: Gelman \insertCite{gelman2003}{canopy2}
-or Spiegelhalter \insertCite{Spiegelhalter2002}{canopy2}. For both
-definitions, the deviance information criterion is calculated as
+{
+The Bayesian information criterion (BIC) is computed by modifying the
+classical definition \insertCite{Schwarz_1978}{canopy2}. Since the prior is flat, the
+likelihood is proportional to the posterior, so the maximum a posteriori (MAP)
+estimate is equivalent to the maximum likelihood estimate (MLE). The MAP
+estimate is equal to the mode of the posterior distribution and defined as
+the value of the parameter that maximizes the posterior distribution, which
+is the value at which the distribution reaches its highest peak. Thus, we can
+replace the maximized log-likelihood with the maximized log-posterior.
+However, since we have multiple chains, we take the mean of this maximized
+value across \code{nchains}.
 
-\deqn{DIC = -2log(p(y|\bar{\theta}))+2p_{DIC},}
+\deqn{\text{BIC} = -2\log\big(\frac{1}{\text{nchains}}\sum_{j=1}^{\text{nchains}}p_j(\widehat{\theta}|y)\big)+p\log(n),}
 
-where \eqn{y} denotes the observed data and \eqn{\bar{\theta}=E(\theta|y)}
-denotes the posterior mean.
+where \eqn{\widehat{\theta}} denotes the maximum a posteriori (MAP) estimate,
+\eqn{y} denotes the observed data, \eqn{p} denotes the number of parameters,
+and \eqn{n} denotes the total sample size.
 
-In the above, \eqn{p_{DIC}} represents the effective number of parameters, which
-differs in definition based on the method employed. For Gelman,
-\eqn{p_{DIC, Gelman}=2\text{var}_{\text{post}}(\text{log}(p(y|\theta)))}, and for
-Spiegelhalter,
-\eqn{p_{DIC, Spiegel} = 2[\text{log}(p(y|\bar{\theta}))-E_{post}(\text{log}(p(y|\theta)))]}.
+In this particular case, \eqn{ p=K} (the number of subclones) since we
+are attempting to determine the optimal number of subclones, and
+\eqn{n = 2(M \times N) + 2(M \times S)} since the sample size
+involves summing across the dimensions of the observed data where
+\eqn{\text{dim}(R^{s})=\text{dim}(X^{s})=M\times N} and
+\eqn{\text{dim}(R^{b})=\text{dim}(X^{b})=M\times S} for
+\eqn{M} mutations, \eqn{N} single-cells, and \eqn{S} bulk samples.
+}
 }
 \examples{
 #Load post-processed data for patient GBM10
 data("GBM10_postproc")
 
 # Run Canopy2 to get list of phylogenetic trees corresponding to all chains
-# and all subclones
+# and all subclones.
+# Note: this is written to quickly compile for demonstration purposes, as we
+# know the optimal number of subclones is 6. In practice, we would attempt a
+# larger range of subclones (e.g., Klist=3:10) and a larger number of
+# iterations and chains (e.g., niter=50000 and nchains=10).
 get.trees.out<-get_trees(Rs=GBM10_postproc@Rs, Rb=GBM10_postproc@Rb,
                          Xs=GBM10_postproc@Xs, Xb=GBM10_postproc@Xb,
                          alpha=GBM10_postproc@param.est$alpha,
                          beta=GBM10_postproc@param.est$beta, kappa=1,
-                         tau=999, Klist=4:6, niter=10000, nchains=20, thin=20,
-                         pburn=0.5, seed=8675309)
+                         tau=999, Klist=5:7, niter=5000, nchains=5, thin=20,
+                         pburn=0.2, seed=8675309)
 
 # Examine diagnostic plots
-get_diagnostics(get.trees.out, project=NULL, outpath=NULL)
+get_diagnostics(get.trees.out)
 
-# Get best tree across all chains and subclones via DIC
+# Get best tree across all chains and subclones via BIC
 best.tree.out<-get_best_tree(get.trees.out)
 
 best.tree.out

@@ -36,7 +36,7 @@ cell-to-clone assignment matrix, \code{Ps}, and sample-to-clone assignment matri
 \code{Pb}. See \bold{details} for further information.
 }
 \details{
-The plot consists of a three-tier structure.
+The output consists of a three-tier structure.
 
 The first (top) component is the clonal configuration matrix, \code{Z}.
 This is used to generate a tree that is arranged upright such that time runs

@@ -1,15 +1,10 @@
 #' Best Phylogenetic Tree
 #'
-#' Produce the optimal configuration of the phylogenetic tree by using the
-#' deviance information criterion (DIC) computed via the
-#' Gelman \insertCite{gelman2003}{canopy2} or Spiegelhalter
-#' \insertCite{Spiegelhalter2002}{canopy2} definitions.
+#' Produce the optimal configuration of the phylogenetic tree by using a modified
+#' version of the Bayesian information criterion (BIC).
 #'
 #' @param get.trees.out sample of phylogenetic trees output from function
 #' \code{get_trees()} of class \code{get_trees}.
-#' @param method type of DIC used for model selection and must be
-#' one of method \code{"spiegelhalter"} or \code{"gelman"}. Defaults to
-#' \code{"spiegelhalter"}.
 #' @param save.muts a logical indicating whether a text file containing all
 #' mutations along the branches should be saved. If \code{TRUE}, must specify
 #' \code{project} and \code{outpath}. Defaults to \code{FALSE}.
@@ -26,31 +21,42 @@
 #' @param outpath a string specifying the location at which to save output
 #' generated from \code{save.muts} and \code{save.plot}.
 #'
-#' @details
-#' DIC is computed by two definitions: Gelman \insertCite{gelman2003}{canopy2}
-#' or Spiegelhalter \insertCite{Spiegelhalter2002}{canopy2}. For both
-#' definitions, the deviance information criterion is calculated as
+#' @details{
+#' The Bayesian information criterion (BIC) is computed by modifying the
+#' classical definition \insertCite{Schwarz_1978}{canopy2}. Since the prior is flat, the
+#' likelihood is proportional to the posterior, so the maximum a posteriori (MAP)
+#' estimate is equivalent to the maximum likelihood estimate (MLE). The MAP
+#' estimate is equal to the mode of the posterior distribution and defined as
+#' the value of the parameter that maximizes the posterior distribution, which
+#' is the value at which the distribution reaches its highest peak. Thus, we can
+#' replace the maximized log-likelihood with the maximized log-posterior.
+#' However, since we have multiple chains, we take the mean of this maximized
+#' value across \code{nchains}.
 #'
-#' \deqn{DIC = -2log(p(y|\bar{\theta}))+2p_{DIC},}
+#' \deqn{\text{BIC} = -2\log\big(\frac{1}{\text{nchains}}\sum_{j=1}^{\text{nchains}}p_j(\widehat{\theta}|y)\big)+p\log(n),}
 #'
-#' where \eqn{y} denotes the observed data and \eqn{\bar{\theta}=E(\theta|y)}
-#' denotes the posterior mean.
+#' where \eqn{\widehat{\theta}} denotes the maximum a posteriori (MAP) estimate,
+#' \eqn{y} denotes the observed data, \eqn{p} denotes the number of parameters,
+#' and \eqn{n} denotes the total sample size.
 #'
-#' In the above, \eqn{p_{DIC}} represents the effective number of parameters, which
-#' differs in definition based on the method employed. For Gelman,
-#' \eqn{p_{DIC, Gelman}=2\text{var}_{\text{post}}(\text{log}(p(y|\theta)))}, and for
-#' Spiegelhalter,
-#' \eqn{p_{DIC, Spiegel} = 2[\text{log}(p(y|\bar{\theta}))-E_{post}(\text{log}(p(y|\theta)))]}.
+#' In this particular case, \eqn{ p=K} (the number of subclones) since we
+#' are attempting to determine the optimal number of subclones, and
+#' \eqn{n = 2(M \times N) + 2(M \times S)} since the sample size
+#' involves summing across the dimensions of the observed data where
+#' \eqn{\text{dim}(R^{s})=\text{dim}(X^{s})=M\times N} and
+#' \eqn{\text{dim}(R^{b})=\text{dim}(X^{b})=M\times S} for
+#' \eqn{M} mutations, \eqn{N} single-cells, and \eqn{S} bulk samples.
+#' }
 #'
 #' @return
 #' A list containing: \code{K}, a numeric corresponding to the optimal number of
-#' subclones occurring at the minimum DIC, \code{tree}, an object of class
+#' subclones occurring at the minimum BIC, \code{tree}, an object of class
 #' \code{"phylo"} representing the best phylogenetic tree corresponding to the
-#' optimal number of subclones (K), \code{branches.muts}, a matrix containing the
+#' optimal number of subclones \code{K}, \code{branches.muts}, a matrix containing the
 #' names of the mutations assigned to each branch along the tree,
 #' \code{clonals.muts}, a matrix containing the names of the mutations assigned
 #' to each subclone, \code{posteriors}, a numeric of posteriors corresponding to
-#' the final tree, \code{DIC}, a numeric corresponding to the minimum DIC across
+#' the final tree, \code{BIC}, a numeric corresponding to the minimum BIC across
 #' all subclones, and \code{acceptance.rate}, a numeric corresponding to the MCMC
 #' acceptance rate for the best tree.
 #' @import magrittr
@@ -60,18 +66,22 @@
 #' data("GBM10_postproc")
 #'
 #' # Run Canopy2 to get list of phylogenetic trees corresponding to all chains
-#' # and all subclones
+#' # and all subclones.
+#' # Note: this is written to quickly compile for demonstration purposes, as we
+#' # know the optimal number of subclones is 6. In practice, we would attempt a
+#' # larger range of subclones (e.g., Klist=3:10) and a larger number of
+#' # iterations and chains (e.g., niter=50000 and nchains=10).
 #' get.trees.out<-get_trees(Rs=GBM10_postproc@Rs, Rb=GBM10_postproc@Rb,
 #'                          Xs=GBM10_postproc@Xs, Xb=GBM10_postproc@Xb,
 #'                          alpha=GBM10_postproc@param.est$alpha,
 #'                          beta=GBM10_postproc@param.est$beta, kappa=1,
-#'                          tau=999, Klist=4:6, niter=10000, nchains=20, thin=20,
-#'                          pburn=0.5, seed=8675309)
+#'                          tau=999, Klist=5:7, niter=5000, nchains=5, thin=20,
+#'                          pburn=0.2, seed=8675309)
 #'
 #' # Examine diagnostic plots
-#' get_diagnostics(get.trees.out, project=NULL, outpath=NULL)
+#' get_diagnostics(get.trees.out)
 #'
-#' # Get best tree across all chains and subclones via DIC
+#' # Get best tree across all chains and subclones via BIC
 #' best.tree.out<-get_best_tree(get.trees.out)
 #'
 #' best.tree.out
@@ -79,7 +89,6 @@
 #' @export
 
 get_best_tree<-function(get.trees.out,
-                        method="spiegelhalter",
                         save.muts=F,
                         save.clones=F,
                         save.plot=F,
@@ -90,9 +99,6 @@ get_best_tree<-function(get.trees.out,
   if (!inherits(get.trees.out, "get_trees")){
     stop("get.trees.out must be of class \"get_trees\" - output from the get_trees
          function")
-  }
-  if (!(method %in% c("spiegelhalter","gelman"))){
-    stop("method must be either 'spiegelhalter' or 'gelman'")
   }
   if(!is.logical(save.muts)){
     stop("Argument save.muts must be a logical (TRUE or FALSE).")
@@ -143,101 +149,56 @@ get_best_tree<-function(get.trees.out,
   alpha<-get.trees.out$alpha # Gene activation rates
   beta<-get.trees.out$beta # Gene deactivation rates
   kappa<-get.trees.out$kappa; tau<-get.trees.out$tau # Sequencing error
-  Klist<-get.trees.out$Klist # Possible numbers of subclones
+  Klist<-get.trees.out$Klist # Range of subclones to evaluate
   nchains<-get.trees.out$nchains # Number of chains of MCMC
 
   # Initialize
   final.out<-list()
   counter<-0
 
-  # Loop over subclones in pre-specified range, Klist
+  # Loop over subclones in pre-specified range Klist
   for (K in Klist){
 
-    # Generate list of mean log-posteriors for each chain
-    list.mean.post<-lapply(1:nchains, function(x)
-                           mean(samples[[x+counter]]$posteriors))
+    # Apply kernel density estimation (KDE) to the log-posterior estimates, and
+    # then find the maximum of this kernel density. This would represent the
+    # log-posterior evaluated at the maximum a posteriori (MAP) estimate.
+    density_at_mode <- function(data) {
+
+       # Perform a kernel density estimate
+       densities <- stats::density(data)
+
+       # Return value of log-posterior at this maximum density
+       densities$x[which.max(densities$y)]
+    }
+
+    # Evaluate the log-posterior at its MAP for each chain
+    list.maxLogPost<-lapply(1:nchains, function(x)
+                     density_at_mode(samples[[x+counter]]$posteriors))
 
     # Store ID associated with the best chain which maximizes the log-posterior
-    id.max.post<-which.max(list.mean.post)
+    id.max.post<-which.max(list.maxLogPost)
 
     # Store samples associated with the best chain
     best.chain<-samples[[id.max.post+counter]]
 
-    # Store log posteriors associated with best chain
+    # Log-posteriors from best chain
     logPost<-best.chain$posteriors
 
-    # Compute the mean of the posterior samples from the best chain
-    logPost.mean<-mean(best.chain$posteriors)
+    # Compute the mean of the maximized log-Posteriors across all chains
+    mean.maxLogPost<-mean(unlist(list.maxLogPost))
 
-    #---------------------------------------------------------------------------
-    # In the below calculations for DIC:
-    # i)  logPost is a vector of log posteriors
-    # i)  logPost.thetabar denotes the log of the mean posterior samples
-    # ii) logPost.mean denotes the mean of the log posteriors (i.e., the
-    #     mean of logPost)
-    #-------------------------------------------------------------------------
-    # Compute DIC via Gelman definition
-    # Gelman et al. Bayesian Data Analysis. 3rd Edition, 2013 (Chapter 7.2, p173)
-    # Free, non-commercial version here: http://www.stat.columbia.edu/~gelman/book/BDA3.pdf
-    if(method=="gelman"){
+    # Compute BIC
+    BIC<- -2*mean.maxLogPost + K*log(2*M*N+2*M*S)
 
-      # Compute effective number of parameters
-      pD_gelman <- 2*stats::var(logPost)
-      # Compute DIC
-      DIC<- -2*logPost.thetabar + 2*pD_gelman
-
-    } # End if
-
-    #---------------------------------------------------------------------------
-    # Compute DIC via Spiegelhalter defn
-    # https://www.mrc-bsu.cam.ac.uk/wp-content/uploads/DIC-slides.pdf
-    # Spiegelhalter et al. 2002, Bayesian measures of model complexity and fit
-    #---------------------------------------------------------------------------
-    if(method=="spiegelhalter"){
-
-      # Parameter means (theta_bar) for DIC
-      Z.list<-lapply(1:length(best.chain$tree),
-                     function(x) best.chain$tree[[x]]$Z)
-      Z.mean<-apply(simplify2array(Z.list), 1:2, mean)
-
-      Ps.list<-lapply(1:length(best.chain$tree),
-                      function(x) best.chain$tree[[x]]$Ps)
-      Ps.mean<-apply(simplify2array(Ps.list), 1:2, mean)
-
-      Pb.list<-lapply(1:length(best.chain$tree),
-                      function(x) best.chain$tree[[x]]$Pb)
-      Pb.mean<-apply(simplify2array(Pb.list), 1:2, mean)
-
-      # Mixture of beta-binomial likelihoods for the single cell data
-      Qs <- Z.mean%*%Ps.mean
-      logPost.thetabar <- sum((logdBetaBinom(Rs, Xs, alpha, beta))*Qs+
-                              (logdBetaBinom(Rs, Xs, kappa, tau))*(1-Qs))
-
-      # Combine with binomial likelihood (written up to a proportionality constant)
-      # for the bulk data
-      Qb <- pmin(pmax(1/2*Z.mean%*%Pb.mean, 0.01),0.99)
-      #log of mean posterior samples
-      logPost.thetabar <- logPost.thetabar+sum(Rb*log(Qb)+(Xb-Rb)*log(1-Qb))
-
-      # Compute effective number of parameters
-      pD_spiegel <- 2*(logPost.thetabar-logPost.mean)
-      # Spiegelhalter defn of DIC
-      DIC <- -2*logPost.thetabar+2*pD_spiegel
-
-    } # End if
-
-    # Store the id of the final tree corresponding to best chain
-    id.tree<-length(best.chain$posteriors)
-
-    # Store the final tree
-    final.tree<-best.chain$tree[[id.tree]]
+    # Store the final tree from the best chain
+    final.tree<-best.chain$tree[[length(best.chain$tree)]]
 
     # Store output
     temp.out<-list("K"=K,
                    "tree"=final.tree,
                    "Ps"=final.tree$Ps,
                    "posteriors"=best.chain$posteriors,
-                   "DIC"=DIC,
+                   "BIC"=BIC,
                    "acceptance.rate"=mean(best.chain$accept))
     final.out<-append(final.out,temp.out)
 
@@ -250,56 +211,53 @@ get_best_tree<-function(get.trees.out,
   tree.list<-sapply(seq(2,length(final.out),6), function(x) final.out[x])
   Ps.list<-sapply(seq(3,length(final.out),6), function(x) final.out[x])
   post.list<-sapply(seq(4,length(final.out),6), function(x) final.out[x])
-  DIC.list<-sapply(seq(5,length(final.out),6), function(x) final.out[x])
+  BIC.list<-sapply(seq(5,length(final.out),6), function(x) final.out[x])
   accept.list<-sapply(seq(6,length(final.out),6), function(x) final.out[x])
 
-  # Print DIC update to console
+  # Print BIC update to console
   for(i in 1:length(Klist)){
-    print(paste0("k=", Klist[i], "; posterior mean from best chain=",
-                 round(mean(post.list$posteriors[i]),2),
-                 "; DIC=", round(DIC.list[i]$DIC,2)))
-  } # End for loop
+    print(paste0("k=", Klist[i], "; mean of maximized log-posteriors across all chains=",
+                 round(mean.maxLogPost,2),
+                 "; BIC=", round(BIC.list[i]$BIC,2)))
+  }
 
-  # Locate the list ID for which the minimum DIC occurs
-  DIC.list<-unlist(DIC.list)
-  id.min.DIC<-which.min(DIC.list)
+  # Locate the list ID for which the minimum BIC occurs
+  BIC.list<-unlist(BIC.list)
+  id.min.BIC<-which.min(BIC.list)
 
-  # Store K (number of subclones) at minimum DIC
-  K.min.DIC<-Klist[id.min.DIC]$K
+  # Store posteriors at minimum BIC
+  post.min.BIC<-post.list[id.min.BIC]$posteriors
 
-  # Store best tree at minimum DIC
-  tree.min.DIC<-tree.list[id.min.DIC]$tree
+  # Store K (number of subclones) at minimum BIC
+  K.min.BIC<-Klist[id.min.BIC]$K
 
-  # Store posteriors at minimum DIC
-  post.min.DIC<-post.list[id.min.DIC]$posteriors
+  # Store tree at minimum BIC
+  tree.min.BIC<-tree.list[id.min.BIC]$tree
 
-  # Store minimum DIC
-  min.DIC<-DIC.list[id.min.DIC]
+  # Store minimum BIC
+  min.BIC<-BIC.list[id.min.BIC]
 
-  #grDevices::graphics.off()
-
-  # Plot DIC vs number of subclones to visually locate optimal K (occurs at min DIC)
-  plot(Klist, DIC.list,
+  # Plot BIC vs number of subclones to visually locate optimal K (occurs at min BIC)
+  plot(Klist, BIC.list,
        xlab = "Number of subclones",
-       ylab = "DIC",
-       type = "b",
-       xaxt = "n")
+       ylab = "BIC",
+       type = "b")
   graphics::axis(1, at = K)
-  graphics::abline(v = Klist[which.min(DIC.list)], lty = 2)
-  graphics::title(paste("Optimal number of subclones for Canopy2 (min DIC)"))
+  graphics::abline(v = Klist[which.min(BIC.list)], lty = 2)
+  graphics::title(paste("Optimal number of subclones for Canopy2 (min BIC)"))
 
-  # Acceptance rate at minimum DIC
-  accept.min.DIC<-accept.list[id.min.DIC]$acceptance.rate
+  # Acceptance rate at minimum BIC
+  accept.min.BIC<-accept.list[id.min.BIC]$acceptance.rate
 
   # Plot best inferred phylogeny and output mutations at each node
-  branches.muts<-plot_tree(tree=tree.min.DIC,
+  branches.muts<-plot_tree(tree=tree.min.BIC,
                            save.muts=save.muts,
                            save.plot=save.plot,
                            outpath=outpath,
                            project=project)
 
   # Return the single nucleotide variants (SNVs) belonging to each subclone
-  clonal.muts<-get_clonal_composition(tree=tree.min.DIC)
+  clonal.muts<-get_clonal_composition(tree=tree.min.BIC)
 
   # if TRUE, save text file containing all mutations along the branches
   if (save.muts){
@@ -315,13 +273,13 @@ get_best_tree<-function(get.trees.out,
                        quote = FALSE, sep = '\t')
   }
 
-  return(list("K"=K.min.DIC, # Subclones at minimum DIC
-              "tree"=tree.min.DIC, # Tree at minimum DIC
+  return(list("K"=K.min.BIC, # Subclones at minimum BIC
+              "tree"=tree.min.BIC, # Tree at minimum BIC
               "branches.muts"=branches.muts, # mutations within each cluster along tree branches
               "clonal.muts"=clonal.muts, # mutations belonging to each subclone
-              "posteriors"=post.min.DIC, # Posteriors for final tree
-              "DIC"=min.DIC, # Minimum DIC
-              "acceptance.rate"=accept.min.DIC #MCMC acceptance rate
+              "posteriors"=post.min.BIC, # Posteriors for final tree
+              "BIC"=min.BIC, # Minimum BIC
+              "acceptance.rate"=accept.min.BIC #MCMC acceptance rate
               )
          )
 }
