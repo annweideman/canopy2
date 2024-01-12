@@ -162,7 +162,7 @@ get_diagnostics<-function(get.trees.out, project=NULL, outpath=NULL){
   end<-(Klist-(min(Klist)-1))*nchains
   if(nchains<=5){n.row=1}else{n.row=2}
   for (K in Klist){
-    graphics::par(mfrow = c(2, 5),oma = c(2, 0, 6, 0))
+    graphics::par(mfrow = c(n.row, 5),oma = c(2, 0, 4, 0))
     for(i in start:end[count]){
       stats::acf(post.list[[i]],
                  main=paste("Chain", eval(parse(text="chain.id"))))
