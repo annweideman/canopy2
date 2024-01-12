@@ -1,0 +1,309 @@
+---
+title: "canopy2"
+author: "Ann Marie Weideman"
+bibliography: REFERENCES.bib
+output: BiocStyle::html_document
+vignette: >
+  %\VignetteIndexEntry{canopy 2}
+  c%\VignetteEncoding{UTF-8}  
+  %\VignetteEngine{knitr::rmarkdown}
+---
+
+```{r echo=FALSE, include = F}
+knitr::opts_chunk$set(
+  cache=T, # if TRUE knitr will cache the results to reuse in future knits
+  dpi=1000, #resolution of figures
+  fig.align = 'left', # how to align graphics in the final doc. 
+  collapse = TRUE, # collapse the text output into the source blocks
+  comment = "#>", # command to use for commenting
+  echo=TRUE
+  )
+```
+
+This is a demo for the Canopy2 package in `R`. Canopy2 is a statistical and computational method for tumor phylogeny inference using single-nucleotide variants derived from bulk DNA and single-cell RNA sequencing. Canopy2 samples from a joint probability distribution involving a mixture of a binomial and beta-binomials, specifically chosen to account for the sparsity and stochasticity of the single-cell data. 
+
+To use this package, the following inputs are required:
+
+1. `Rb` and `Xb`, alternative (mutated loci) and total (mutated + benign loci) read counts from bulk DNA
+whole exome sequencing (WES) data. Both have dimension $M$ (mutations) $\times$ $S$ (bulk samples). 
+A sample pipeline that can be used to preprocess these data is located in our Zenodo repository at https://zenodo.org/record/7931384.
+
+2. `Rs` and `Xs`, alternative (mutated loci) and total (mutated + benign loci) read counts from single-cell
+RNA sequencing (scRNA-seq) data. Both have dimension $M$ (mutations) $\times$ $N$ (single-cells). A sample pipeline that can be used to preprocess these data is located in our Zenodo repository at https://zenodo.org/record/7931384.
+
+3. `alpha` and `beta`, estimates of the gene activation rates and gene deactivation rates using gene expression data from scRNA-seq. These are mutation-specific and of dimension $1 \times M$. One can use function `get_burstiness_bpsc()` or `get_burstiness_scale()` to estimate `alpha` and `beta`.
+
+4. `kappa` and `tau`, hyperparameters used to estimate the sequencing error. To date (year 2023), the average error rate of next-generation sequencing is reported to be 0.1\% per nucleotide (@Broeckx_2017), so we set the hyperparameters to default values of `kappa=1` and `tau=999` so that the sequencing error rate,
+$\epsilon$ (assumed to follow a beta distribution) has mean $\kappa/(\kappa +\tau) = 0.001$.
+
+*Of note: the notation for the number of bulk samples differs between the text and code. In the text, the number of bulk samples is denoted by $T$, while in the code it is denoted by $S$ (since $T$ stands for `TRUE` in R and can cause conflict).*
+
+We will first demonstrate use of `Canopy2` in a simulation setting. Then, we will apply `Canopy2` to a case study from a patient with glioblastoma (GBM), a cancer of the brain.
+
+# Installation
+
+`Canopy2` is available on `CRAN` ([https://cran.r-project.org/web/packages/canopy2/index.html](https://CRAN.R-project.org/package=canopy2)):
+
+```{r warning=F, message=F, eval=F}
+install.packages('canopy2')  
+```
+
+A developmental version can be installed from GitHub ([https://github.com/annweideman/canopy2](https://github.com/annweideman/canopy2)):
+
+```{r warning=F, message=F, eval=F}
+if (!require("devtools")) install.packages("devtools")
+library(devtools)
+install_github("annweideman/canopy2") # STRONGLY recommended
+```
+
+# Simulation
+
+Let us assume we have been provided with two bulk DNA WES samples (`S=2`) and a small number of single-cells (`N=30`) and point mutations (`M=5`). Additionally, let the true number of subclones (tips of the phlogenetic tree including the normal clone) be equal to four (`ktrue=4`).
+
+The mutation-specific gene activation rate, $\alpha_m$, and deactivation rate, $\beta_m$, are chosen to be close those observed in vitro, i.e., $\alpha_m << \beta_m$. The average error rate of next-generation sequencing is reported to be 0.1\% per nucleotide (@Broeckx_2017), so we set the sequencing error hyperparameters to default values of `kappa=1` and `tau=999` so that the sequencing error rate, $\epsilon$ (assumed to follow a beta distribution) has mean $\kappa/(\kappa +\tau) = 0.001$
+
+We utilize a bulk sequencing depth of 30x (`b.mindepth=30`) to 50x (`b.maxdepth=50`) and a single-cell sequencing depth of 80x (`sc.mindepth=80`) to 120x (`sc.maxdepth=120`). Lower depths, such as these, are more standard in practice as most laboratories have limited budgets. We expect inaccuracies in variant discovery when utilizing lower coverage and suggest that the user experiment with a wide range of sequencing depths when testing these simulations. 
+
+```{r}
+library(canopy2)
+
+# Set parameter values for simulation from beta-binomial
+N=30; S=2; M=5; Ktrue=4 #number of single cells, bulk samples, mutations, clones
+alpha=0.1; beta=1 #gene activation and deactivation rates, treated as identical across all genes for simulation purposes
+scale=300 #scaling factor for beta distribution: rate at which DNA transcribed into RNA
+kappa=1; tau=999 #parameters for sequencing error
+b.mindepth=30; b.maxdepth=50 #bulk min and max sequencing depth
+sc.mindepth=80; sc.maxdepth=120 #single-cell min and max sequencing depth
+scale=300 #scaling factor for beta distribution: rate at which DNA transcribed into RNA
+```
+
+The MCMC will be run for 5,000 iterations (`niter=5000`) across 5 chains (`nchains=5`), although in practice you will want to increase the number of iterations to at least 50k and the number of chains to at least 10. To ensure that the values of the joint posterior are not highly correlated and are evaluated after convergence has occurred, only every 20th value is stored (`thin=20`) and 20% burn-in (`pburn=0.2`) is removed. A range of possible subclones between 3 and 5 (`subclones=3:5`) are evaluated, although we know the truth is 4 subclones (`ktrue=4`).
+
+To simulate data from a beta-binomial distribution, the mutation-specific gene activation rates, $\alpha_m$, and gene deactivation rates, $\beta_m$, will need to first be estimated from simulated gene expression data using the `param.est` function. The gene expression data is simulated from a beta-Poisson distribution in the `simulate_data()` function; the methodology behind this is discussed further in the text. 
+
+```{r}
+seed=8675309 # seed to start random number generation
+
+# Simulate data from a beta-binomial distn
+sims.out<-simulate_data(N=N, S=S, M=M, alpha=alpha, beta=beta, kappa=kappa, 
+                        tau=tau, Ktrue=Ktrue, b.mindepth=b.mindepth, 
+                        b.maxdepth=b.maxdepth, sc.mindepth=sc.mindepth,
+                        sc.maxdepth=sc.maxdepth, scale=scale, seed=seed)
+```
+
+After simulating read counts using the `simulate_data()` function, the vectors of mutation-specific hyperparameters, `alpha` and `beta`, which represent the gene activation and deactivation rates, can be estimated empirically using the gene in which each point mutation resides. The Canopy2 package provides two functions, `get_burstiness_bpsc()` and `get_burstiness_scale()`, to estimate these hyperparameters. The BPSC routine depends on MCMC routines, whereas, the SCALE routine utilizes moment estimators. The BPSC methodology is appropriate for gene expression datasets of small to moderate size and was shown to outperform the SCALE methodology in estimation (see manuscript Supplemental Material). For large datasets, we recommend trying the BPSC methodology first, and, if too computationally intensive, we suggest employing the SCALE methodology instead.
+
+```{r}
+# Estimate parameters for gene kinetics using the BPSC methodology
+# Note: can also use get_burstiness_scale() for large datasets
+param.out<-get_burstiness_bpsc(counts=sims.out$G)
+#gene activation rate
+param.out$alpha
+#gene deactivation rate
+param.out$beta
+```
+
+While not relevant for this simulation, in the real data there will generally be some mutations for which bursting kinetics cannot be estimated due to an abundance of zero read counts. Thus, after $\alpha$ and $\beta$ are estimated, the alternative and total read counts for both the bulk and single cell data must be subsetted to include only those mutations with estimable $\alpha_m$ and $\beta_m$, where subscript $m$ denotes the mutation. For demonstration, we will include this chunk of code, although the number of rows in the read count matrices ($R^S$, $R^B$, $X^S$, $X^B$) will remain unchanged.
+
+```{r}
+# Row numbers corresponding to estimable gene kinetics 
+param.out$id.g
+
+# Subset the read counts to include only those mutations with estimable gene
+# kinetics
+Rs<-sims.out$Rs[param.out$id.g,] # single cell alternative read counts
+Xs<-sims.out$Xs[param.out$id.g,] # single cell total read counts
+Rb<-sims.out$Rb[param.out$id.g,] # bulk alternative read counts
+Xb<-sims.out$Xb[param.out$id.g,] # bulk total read counts
+```
+
+The estimates for $\alpha$ and $\beta$ are passed to `get_trees()`, which outputs trees, posteriors, and Metropolis-Hastings acceptance rate associated with $K$ subclones. The output from `get_trees()` will consist of a list of lists of length `nchains * K` where each list corresponds to a specific chain and subclone.
+
+```{r}
+# Specify arguments for MCMC
+nchains<-5 # number of chains
+pburn<-0.2 # percent burn-in to remove
+thin<-20 # save every 20th iteration (discard 1-19)
+niter<-5000 # number of iterations of MCMC
+Klist=3:5 # range of subclones to try
+ncores=10 #number of cores
+
+# Produce trees, posteriors and Metropolis-Hastings acceptance rate associated 
+# with K subclones
+sim.trees<-get_trees(Rs=Rs, Rb=Rb, Xs=Xs, Xb=Xb,
+                     alpha=param.out$alpha, beta=param.out$beta, 
+                     kappa=kappa, tau=tau, Klist=Klist, niter=niter, 
+                     nchains=nchains, thin=thin, pburn=pburn, 
+                     ncores=ncores, seed=seed)
+
+# For K=3 and the first chain
+sim.trees$samples[[1]]$K
+sim.trees$samples[[1]]$tree[[1]] #print only first tree from first iteration
+tail(sim.trees$samples[[1]]$posteriors)
+sim.trees$samples[[1]]$`acceptance rate`
+```
+
+The trees and posteriors obtained from `get_trees()` can be used to produce diagnostic plots to investigate the lag autocorrelation factor (lag ACF), posterior densities, and trace plots. Recall, we want the lag ACF, or the correlation between adjacent posterior values, to be low. Additionally, the posterior densities should align in space, and the trace plots should appear as random noise.
+
+```{r}
+get_diagnostics(get.trees.out=sim.trees)
+```
+
+Finally, `get_best_tree()` is used to produce the optimal configuration of the phylogenetic tree by using a modification of the Bayesian information criterion (BIC) as defined in the documentation.
+
+The tree corresponding to the minimum BIC is that with 4 subclones which coincides with the true number of subclones.
+
+```{r, warning=F, fig.width=6, fig.asp=1.5, out.width='70%'}
+sim.best.tree<-get_best_tree(get.trees.out=sim.trees)
+sim.best.tree
+```
+We can quantify the absolute reconstruction error associated with estimating the three components of the tree, $Z$, $P^s$, and $P^b$ by finding the minimum absolute distance between the inference and all permutations of the truth.
+
+```{r warning=F}
+ez<-error_z(true.Z=sims.out$true.tree$Z, inferred.Z=sim.best.tree$tree$Z)
+eps<-error_ps(true.Ps=sims.out$true.tree$Ps, inferred.Ps=sim.best.tree$tree$Ps)
+epb<-error_pb(true.Pb=sims.out$true.tree$Pb, inferred.Pb=sim.best.tree$tree$Pb)
+```
+Thus, there is `r round(ez)`\% error in estimating the clonal configuration matrix, $Z$, `r round(eps)`\% error in estimating the single-cell to clone assignment matrix, $P^s$, and `r round(epb)`\% error in estimating the bulk sample to clone assignment matrix, $P^b$, which is reasonable given the small number of MCMC iterations and chains.
+
+# Application to real data
+
+In this example, we apply Canopy2 to data from a patients with glioblastoma, a cancer of the brain. The package contains sample datasets from three patients: GBM2, GBM9, and GBM10. GBM10 is the smallest of these three and thus used for demonstration purposes. We also make data available from two patients with breast cancer (BC), BC03 and BC07.
+
+All datasets are saved in the pre- and post-processed forms. For example, GBM10 is available in pre-processed form as `GBM10_preproc` and post-processed form as `GBM10_postproc`. For this particular example, we will use the post-processed data, and we refer the user to the subsequent section [Data processing] where we discuss the differences between the pre- and post-processed forms and how to conduct the post-processing.
+
+First, we load the post-processed data for patient GBM10
+
+```{r warning=F}
+data("GBM10_postproc")
+```
+
+We then run Canopy2 to obtain a list of phylogenetic trees corresponding to all chains and all subclones. We experiment with 4-8 subclones (`Klist=4:8`) and a small number of MCMC iterations (`niter=10000`) for demonstration purposes. We suggest increasing the number of iterations substantially (e.g., 50k or 100k) when conducting your own real data analysis and running on a computing cluster. 
+
+```{r warning=F}
+get.trees.out<-get_trees(Rs=GBM10_postproc@Rs, Rb=GBM10_postproc@Rb,
+                         Xs=GBM10_postproc@Xs, Xb=GBM10_postproc@Xb,
+                         alpha=GBM10_postproc@param.est$alpha,
+                         beta=GBM10_postproc@param.est$beta, kappa=kappa,
+                         tau=tau, Klist=4:8, niter=10000, nchains=10, 
+                         thin=thin, pburn=pburn, seed=8675309)
+```
+
+A quick look at the diagnostic plots for reveals that the posteriors are well-aligned in space for `K=6`, the lag ACF is low (below the 0.3 threshold) at lag 5 or 10 (except for chain 6), and the trace plots appear as random noise. Overall, we don't observe anything of concern in the diagnostic plots.
+
+```{r warning=F}
+get_diagnostics(get.trees.out)
+```
+
+Finally, we want to determine the optimal number of subclones across the range of`K=4:8`. It appears from the plot that BIC is minimized for `K=6`, so we select this as the final configuration.
+
+```{r}
+best.tree.out<-get_best_tree(get.trees.out)
+best.tree.out$tree$Z
+```
+
+# Data processing
+
+The data folder contains both pre- and post-processed datasets. In this section, we demonstrate how to manipulate the pre-processed dataset for patient GBM10 to arrive at the post-processed dataset.
+
+The pre-processed datasets were obtained by following the workflows outlined in the methods on somatic variant calling in the main text with associated scripts located at https://zenodo.org/record/7931384. This produced the finalized SNV callset for the single-cell and bulk data.
+
+The alternative (`GBM10_preproc@alt.qc`) and reference (`GBM10_preproc@ref.qc`) read counts contain columns from \textbf{both} the single-cell and bulk data. First, we separate these to generate single-cell only and bulk only datasets for both the alternative (mutated) and total (benign + mutated) read counts.
+
+```{r warning=F}
+data(GBM10_preproc)
+# Annotation of variants
+annovar0<-GBM10_preproc@annovar
+# Gene expression data
+gene.expr0<-GBM10_preproc@featurecounts.qc
+
+# Subset single-cell alternative read counts
+Rs0<-GBM10_preproc@alt.qc[,grepl("SC", colnames(GBM10_preproc@alt.qc))]
+# Subset single-cell total read counts (mutated + benign)
+Xs0<-GBM10_preproc@alt.qc[,grepl("SC", colnames(GBM10_preproc@alt.qc))]+
+     GBM10_preproc@ref.qc[,grepl("SC", colnames(GBM10_preproc@alt.qc))]
+
+# Subset bulk alternative read counts
+Rb0<-GBM10_preproc@alt.qc[,grepl("DNA\\>", colnames(GBM10_preproc@alt.qc))]
+# Subset bulk total read counts
+Xb0<-GBM10_preproc@alt.qc[,grepl("DNA\\>", colnames(GBM10_preproc@alt.qc))] +
+  GBM10_preproc@ref.qc[,grepl("DNA\\>", colnames(GBM10_preproc@alt.qc))]
+```
+
+Next, we identify those mutations (rows) with zero alternative read counts across all cells and remove these from the single-cell data. We repeat for the bulk data so that the mutations (rows) are identical for both the single-cell and bulk data.
+
+We also identify those cells (columns) with zero total read counts across all mutations and remove these from the single-cell data.
+
+Finally, the we are only interested in keeping annotations corresponding to the remaining mutations and samples that have at least one non-zero count across genes in the gene expression data.
+
+```{r warning=F}
+# identify mutations (rows) with non-zero alternative read counts across all cells
+mut.nonzero<-which(rowSums(Rs0)!=0)
+# identify cells (columns) with non-zero total read counts across all mutations
+cell.nonzero<-which(colSums(Xs0)!=0)
+
+# Subset the single-cell read counts accordingly
+Rs1<-Rs0[mut.nonzero,cell.nonzero]
+Xs1<-Xs0[mut.nonzero,cell.nonzero]
+
+# Subset the bulk data to coincide with the remaining mutations in the single-cell data
+Rb1<-Rb0[mut.nonzero,]
+Xb1<-Xb0[mut.nonzero,]
+
+# Keep annotations corresponding to remaining mutations
+annovar<-annovar0[mut.nonzero,]
+# Keep samples that that have at least one non-zero count across genes in
+# gene expression data
+gene.expr1<-gene.expr0[,cell.nonzero]
+```
+
+Next, we use biomaRt to map chromosome positions to HGNC symbols and return the original (sorted) read counts from the gene expression data with the appended HGNC symbols.
+
+```{r warning=F}
+# Map chromosome positions to HGNC symbol
+Rs.temp<-get_BM_fun(Rs1)
+
+# Get hgnc symbol associated with ensembl gene id
+gene.expr<-get_gene_expression(featurecounts=gene.expr1, build=37)
+
+# Subset and sort gene expression data to coincide with gene names and gene
+# order from the read counts data
+gene.expr.sub0<-data.frame(gene.expr[match(Rs.temp[,1], gene.expr$hgnc_symbol),])
+gene.expr.sub<-data.matrix(gene.expr.sub0[,-c(1:2)])
+```
+
+Finally, we use the BPSC methodology \insertCite{Vu2016}{canopy2} applied to the single-cell gene expression data to estimate bursting kinetics parameters: gene activation rate (`alpha`), gene deactivation rate (`beta`), and transcription rate (`scale`).The function performs library size factor normalization internally. This methodology differs from the SCALE methodology \insertCite{Jiang2017}{canopy2} utilized in `get_burstiness_scale` in that it estimates the parameters by MCMC sampling. While BPSC tends to be less computationally efficient than SCALE, we found that it had improved estimability (non-NA or negative values).
+
+As demonstrated earlier in the vignette, recall that there will generally be some mutations for which the bursting kinetics cannot be estimated to due to an abundance of zero read counts. The function `get_burstiness_bpsc` returns the IDs for which the bursting kinetics parameters, $\alpha$ and $\beta$, can be estimated. The read count data is then subsetted to only include those mutations with estimable $\alpha_m$ and $\beta_m$, where subscript $m$ denotes the mutation.
+
+```{r warning =F}
+# Estimate bursting kinetics for the full dataset
+param.est<-get_burstiness_bpsc(counts=gene.expr.sub)
+
+# Subset alternative and total read counts to include only mutations for which
+# gene burstiness can be estimated.
+Rs<-data.matrix(Rs1[param.est$id.g,]) #single-cell alternative read counts
+Xs<-data.matrix(Xs1[param.est$id.g,]) #single-cell total read counts
+Rb<-data.matrix(Rb1[param.est$id.g,]) #bulk alternative read counts
+Xb<-data.matrix(Xb1[param.est$id.g,]) #bulk total read counts
+```
+
+The post-processed data can then be stored as class `S4`.
+
+```{r warning=F}
+GBM10_postproc<-setClass("GBM10_postproc", slots = c(Rs="matrix", Xs="matrix", Rb="matrix", Xb="matrix",
+                                                   annovar.qc="data.frame", featurecounts.qc="matrix",
+                                                   param.est="list"))
+GBM10_postproc<-GBM10_postproc()
+GBM10_postproc@Rs<-Rs; GBM10_postproc@Xs<-Xs; GBM10_postproc@Rb<-Rb; GBM10_postproc@Xb<-Xb
+GBM10_postproc@annovar.qc<-annovar; GBM10_postproc@featurecounts.qc<-gene.expr.sub
+GBM10_postproc@param.est<-param.est
+```
+
+If desired, the final post-processed dataset can be exported as an `rda` file for later use.
+
+```{r warning=F, message=F, eval=F}
+save(GBM10_postproc, file = paste0(file_location,"GBM10_postproc.rda"))
+```
+
+# References
