@@ -51,7 +51,7 @@ install.packages('canopy2')
 A developmental version can be installed from GitHub ([https://github.com/annweideman/canopy2](https://github.com/annweideman/canopy2)):
 
 ```{r warning=F, message=F, eval=F}
-if (!require("devtools")) install.packages("devtools")
+     if (!require("devtools")) install.packages("devtools")
 library(devtools)
 install_github("annweideman/canopy2") # STRONGLY recommended
 ```
