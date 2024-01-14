@@ -153,7 +153,8 @@ Finally, `get_best_tree()` is used to produce the optimal configuration of the p
 
 The tree corresponding to the minimum BIC is that with 4 subclones which coincides with the true number of subclones.
 
-```{r, warning=F, fig.width=6, fig.asp=1.5, out.width='70%'}
+```{r, warning=F}
+#fig.width=6, fig.asp=1.5, out.width='70%'
 sim.best.tree<-get_best_tree(get.trees.out=sim.trees)
 sim.best.tree
 ```
