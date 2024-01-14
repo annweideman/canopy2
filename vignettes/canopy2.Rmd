@@ -11,7 +11,7 @@ vignette: >
 
 ```{r echo=FALSE, include = F}
 knitr::opts_chunk$set(
-  cache=T, # if TRUE knitr will cache the results to reuse in future knits
+  cache=F, # if TRUE knitr will cache the results to reuse in future knits
   dpi=1000, #resolution of figures
   fig.align = 'left', # how to align graphics in the final doc. 
   collapse = TRUE, # collapse the text output into the source blocks
