@@ -10,10 +10,11 @@ vignette: >
 ---
 
 ```{r echo=FALSE, include = F}
+
 knitr::opts_chunk$set(
   cache=F, # if TRUE knitr will cache the results to reuse in future knits
   dpi=1000, #resolution of figures
-  fig.align = 'left', # how to align graphics in the final doc. 
+  fig.align = 'center', # how to align graphics in the final doc. 
   collapse = TRUE, # collapse the text output into the source blocks
   comment = "#>", # command to use for commenting
   echo=TRUE
@@ -145,6 +146,7 @@ sim.trees$samples[[1]]$`acceptance rate`
 
 The trees and posteriors obtained from `get_trees()` can be used to produce diagnostic plots to investigate the lag autocorrelation factor (lag ACF), posterior densities, and trace plots. Recall, we want the lag ACF, or the correlation between adjacent posterior values, to be low. Additionally, the posterior densities should align in space, and the trace plots should appear as random noise.
 
+<div style="text-align: center;">
 ```{r}
 get_diagnostics(get.trees.out=sim.trees)
 ```
@@ -153,8 +155,8 @@ Finally, `get_best_tree()` is used to produce the optimal configuration of the p
 
 The tree corresponding to the minimum BIC is that with 4 subclones which coincides with the true number of subclones.
 
+<div style="text-align: center;">
 ```{r, warning=F}
-#fig.width=6, fig.asp=1.5, out.width='70%'
 sim.best.tree<-get_best_tree(get.trees.out=sim.trees)
 sim.best.tree
 ```
@@ -192,11 +194,13 @@ get.trees.out<-get_trees(Rs=GBM10_postproc@Rs, Rb=GBM10_postproc@Rb,
 
 A quick look at the diagnostic plots for reveals that the posteriors are well-aligned in space for `K=6`, the lag ACF is low (below the 0.3 threshold) at lag 5 or 10 (except for chain 6), and the trace plots appear as random noise. Overall, we don't observe anything of concern in the diagnostic plots.
 
+<div style="text-align: center;">
 ```{r warning=F}
 get_diagnostics(get.trees.out)
 ```
 
 Finally, we want to determine the optimal number of subclones across the range of`K=4:8`. It appears from the plot that BIC is minimized for `K=6`, so we select this as the final configuration.
+
 
 ```{r}
 best.tree.out<-get_best_tree(get.trees.out)
