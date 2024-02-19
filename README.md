@@ -72,7 +72,7 @@ devtools::install_github("annweideman/canopy2")
 
 ```
 # Vignette
-[Canopy2 Vignette]https://htmlpreview.github.io/?https://github.com/annweideman/canopy2/blob/main/vignettes/canopy2.html
+[Canopy2 Vignette](https://htmlpreview.github.io/?https://github.com/annweideman/canopy2/blob/main/vignettes/canopy2.html)
 
 
 
