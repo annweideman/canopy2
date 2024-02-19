@@ -199,7 +199,8 @@ get_best_tree<-function(get.trees.out,
                    "Ps"=final.tree$Ps,
                    "posteriors"=best.chain$posteriors,
                    "BIC"=BIC,
-                   "acceptance.rate"=mean(best.chain$accept))
+                   "acceptance.rate"=mean(best.chain$accept),
+                   "mean.maxLogpost"=mean.maxLogPost)
     final.out<-append(final.out,temp.out)
 
     # Update counter to skip to next K (each K has nchains)
@@ -207,17 +208,18 @@ get_best_tree<-function(get.trees.out,
   }
 
   # Generate lists of each parameter of interest
-  Klist<-sapply(seq(1,length(final.out),6), function(x) final.out[x])
-  tree.list<-sapply(seq(2,length(final.out),6), function(x) final.out[x])
-  Ps.list<-sapply(seq(3,length(final.out),6), function(x) final.out[x])
-  post.list<-sapply(seq(4,length(final.out),6), function(x) final.out[x])
-  BIC.list<-sapply(seq(5,length(final.out),6), function(x) final.out[x])
-  accept.list<-sapply(seq(6,length(final.out),6), function(x) final.out[x])
+  Klist<-sapply(seq(1,length(final.out),7), function(x) final.out[x])
+  tree.list<-sapply(seq(2,length(final.out),7), function(x) final.out[x])
+  Ps.list<-sapply(seq(3,length(final.out),7), function(x) final.out[x])
+  post.list<-sapply(seq(4,length(final.out),7), function(x) final.out[x])
+  BIC.list<-sapply(seq(5,length(final.out),7), function(x) final.out[x])
+  accept.list<-sapply(seq(6,length(final.out),7), function(x) final.out[x])
+  mean.maxLogPost.list<-sapply(seq(7,length(final.out),7), function(x) final.out[x])
 
   # Print BIC update to console
   for(i in 1:length(Klist)){
-    print(paste0("k=", Klist[i], "; mean of maximized log-posteriors across all chains=",
-                 round(mean.maxLogPost,2),
+    print(paste0("k=", Klist[[i]], "; mean of maximized log-posteriors across all chains=",
+                 round(mean.maxLogPost.list[[i]],2),
                  "; BIC=", round(BIC.list[i]$BIC,2)))
   }
 
