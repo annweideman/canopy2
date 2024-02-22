@@ -1,27 +1,5 @@
 https://github.com/annweideman/canopy2/assets/52984250/6bd2366d-ceff-4d39-a0a1-aefb8611b8e8
 
-# Important Note (added on 12/3/23): 
-If you receive the following error while using the `get_gene_expression()` function, which internally uses `biomaRt::useEnsembl()`:
-```
-Error in `collect()`:
-! Failed to collect lazy table.
-Caused by error in `db_collect()`:
-! Arguments in `...` must be used.
-Problematic argument:
- ..1 = Inf
- Did you misspell an argument name?
-Run `rlang::last_trace()` to see where the error occurred.
-```
-
-This is due to a bug relating to BiocFileCache compatibility with the new version dbplyr. To correct, run the following:
-
-```
-library(BiocManager)
-install("BiocFileCache")
-```
-
-[https://support.bioconductor.org/p/9154901/](https://stat.ethz.ch/pipermail/bioc-devel/2023-October/020003.html)
-
 # Method
 Canopy2: tumor phylogeny inference using bulk DNA and single-cell RNA sequencing
 
@@ -43,7 +21,7 @@ The distinguishing features of Canopy2 when compared to available methods, inclu
   *  `Xb`: Total read counts (benign + mutated) from bulk DNA whole exome sequencing (WES).
   *  `alpha` and `beta`:  $1 \times M$ (number of mutations) vectors of mutation specific gene activation ($\alpha$) and gene deactivation ($\beta$) rates. These can be estimated using either the BPSC methodology in function `get_burstiness_bpsc()` (recommended) or the SCALE methodology with function `get_burstiness_scale()`.
   *  `kappa` and `tau`:   $1 \times 1$ scalars used to compute the sequencing error by $\frac{\kappa}{\kappa + \tau}$. The average error rate of next-generation sequencing is reported to be 0.1\% per nucleotide, so these parameters have been set to default values of $\kappa=1$ and $\tau = 999$ such that $\frac{\kappa}{\kappa + \tau} = 0.001$ (or 0.1\%). 
-  *  `Klist`:   A range of possible numbers of subclones to use for DIC calculations. For each $k$ in Klist, the tree with highest mean posterior density across all post-burn-in iterations and all chains is selected, and then the deviance information criterion (DIC) (of type Gelman or Spiegelhalter) is used to select the optimal configuration. We suggest examining the graph of BIC versus number of subclones to determine the optimal number of subclones. 
+  *  `Klist`:   A range of possible numbers of subclones to use for Bayesian information criterion (BIC) calculations. For each $k$ in Klist, the tree with highest mean posterior density across all post-burn-in iterations and all chains is selected, and then BIC is used to select the optimal configuration. We suggest examining the graph of BIC versus number of subclones to determine the optimal number of subclones. 
  
 **Outputs:** Three-tier configuration consisting of
 * `Z`: $M \times K$ clonal tree configuration matrix, a binary matrix which assigns mutations to clones
@@ -69,8 +47,32 @@ if(length(new.packages)) install.packages(new.packages)
 BiocManager::install("biomaRt")
 devtools::install_github("nghiavtr/BPSC")
 devtools::install_github("annweideman/canopy2")
+
+```
+# Vignette
+[Canopy2 Vignette](https://htmlpreview.github.io/?https://github.com/annweideman/canopy2/blob/main/vignettes/canopy2.html)
+
+# Important Note (added on 12/3/23): 
+If you receive the following error while using the `get_gene_expression()` function, which internally uses `biomaRt::useEnsembl()`:
+```
+Error in `collect()`:
+! Failed to collect lazy table.
+Caused by error in `db_collect()`:
+! Arguments in `...` must be used.
+Problematic argument:
+ ..1 = Inf
+ Did you misspell an argument name?
+Run `rlang::last_trace()` to see where the error occurred.
 ```
 
+This is due to a bug relating to BiocFileCache compatibility with the new version dbplyr. To correct, run the following:
+
+```
+library(BiocManager)
+install("BiocFileCache")
+```
+
+[https://support.bioconductor.org/p/9154901/](https://stat.ethz.ch/pipermail/bioc-devel/2023-October/020003.html)
 
 
 
