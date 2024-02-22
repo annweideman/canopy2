@@ -66,19 +66,19 @@ replace the maximized log-likelihood with the maximized log-posterior.
 However, since we have multiple chains, we take the mean of this maximized
 value across \code{nchains}.
 
-\deqn{\text{BIC} = -2\log\big(\frac{1}{\text{nchains}}\sum_{j=1}^{\text{nchains}}p_j(\widehat{\theta}|y)\big)+p\log(n),}
+\deqn{\text{BIC}_{\text{MAP}} = -2\log\left(\frac{1}{n_{chains}}\sum_{j=1}^{n_{chains}}p_j(\widehat{\theta}_{\text{MAP}}|y)\right)+p\log(n),}
 
-where \eqn{\widehat{\theta}} denotes the maximum a posteriori (MAP) estimate,
+where \eqn{n_{chains}} denotes the number of MCMC chains,
+\eqn{\widehat{\theta}_{\text{MAP}}} denotes the MAP estimate,
 \eqn{y} denotes the observed data, \eqn{p} denotes the number of parameters,
 and \eqn{n} denotes the total sample size.
 
-In this particular case, \eqn{ p=K} (the number of subclones) since we
-are attempting to determine the optimal number of subclones, and
-\eqn{n = 2(M \times N) + 2(M \times S)} since the sample size
-involves summing across the dimensions of the observed data where
-\eqn{\text{dim}(R^{s})=\text{dim}(X^{s})=M\times N} and
-\eqn{\text{dim}(R^{b})=\text{dim}(X^{b})=M\times S} for
-\eqn{M} mutations, \eqn{N} single-cells, and \eqn{S} bulk samples.
+In this particular case, \eqn{p=K} (the number of subclones) since we are
+attempting to determine the optimal number of subclones. The sample size,
+\eqn{n = 2(M \times N) + 2(M \times T)}, reflects the aggregate dimensions of
+the observed data where \eqn{\text{dim}(R^{s})=\text{dim}(X^{s})=M\times N} and
+\eqn{\text{dim}(R^{b})=\text{dim}(X^{b})=M\times T} for
+\eqn{M} mutations, \eqn{N} single cells, and \eqn{T} bulk samples.
 }
 }
 \examples{
