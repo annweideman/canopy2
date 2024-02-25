@@ -63,12 +63,13 @@ estimate is equal to the mode of the posterior distribution and defined as
 the value of the parameter that maximizes the posterior distribution, which
 is the value at which the distribution reaches its highest peak. Thus, we can
 replace the maximized log-likelihood with the maximized log-posterior.
-However, since we have multiple chains, we take the mean of this maximized
+However, since we have multiple chains, we take the median of this maximized
 value across \code{nchains}.
 
-\deqn{\text{BIC}_{\text{MAP}} = -2\log\left(\frac{1}{n_{chains}}\sum_{j=1}^{n_{chains}}p_j(\widehat{\theta}_{\text{MAP}}|y)\right)+p\log(n),}
+\deqn{\text{BIC}_{\text{MAP}} = -2\log\left(\tilde{p}_j(\widehat{\theta}_{\text{MAP}}|y)\right)+p\log(n),}
 
-where \eqn{n_{chains}} denotes the number of MCMC chains,
+where \eqn{\tilde{p}_j(\widehat{\theta}_{\text{MAP}}|y)} is the median of the maximized
+posteriors across all MCMC chains,
 \eqn{\widehat{\theta}_{\text{MAP}}} denotes the MAP estimate,
 \eqn{y} denotes the observed data, \eqn{p} denotes the number of parameters,
 and \eqn{n} denotes the total sample size.

@@ -30,12 +30,13 @@
 #' the value of the parameter that maximizes the posterior distribution, which
 #' is the value at which the distribution reaches its highest peak. Thus, we can
 #' replace the maximized log-likelihood with the maximized log-posterior.
-#' However, since we have multiple chains, we take the mean of this maximized
+#' However, since we have multiple chains, we take the median of this maximized
 #' value across \code{nchains}.
 #'
-#' \deqn{\text{BIC}_{\text{MAP}} = -2\log\left(\frac{1}{n_{chains}}\sum_{j=1}^{n_{chains}}p_j(\widehat{\theta}_{\text{MAP}}|y)\right)+p\log(n),}
+#' \deqn{\text{BIC}_{\text{MAP}} = -2\log\left(\tilde{p}_j(\widehat{\theta}_{\text{MAP}}|y)\right)+p\log(n),}
 #'
-#' where \eqn{n_{chains}} denotes the number of MCMC chains,
+#' where \eqn{\tilde{p}_j(\widehat{\theta}_{\text{MAP}}|y)} is the median of the maximized
+#' posteriors across all MCMC chains,
 #' \eqn{\widehat{\theta}_{\text{MAP}}} denotes the MAP estimate,
 #' \eqn{y} denotes the observed data, \eqn{p} denotes the number of parameters,
 #' and \eqn{n} denotes the total sample size.
@@ -184,11 +185,11 @@ get_best_tree<-function(get.trees.out,
     # Log-posteriors from best chain
     logPost<-best.chain$posteriors
 
-    # Compute the mean of the maximized log-Posteriors across all chains
-    mean.maxLogPost<-mean(unlist(list.maxLogPost))
+    # Compute the median of the maximized log-Posteriors across all chains
+    median.maxLogPost<-median(unlist(list.maxLogPost))
 
     # Compute BIC
-    BIC<- -2*mean.maxLogPost + K*log(2*M*N+2*M*S)
+    BIC<- -2*median.maxLogPost + K*log(2*M*N+2*M*S)
 
     # Store the final tree from the best chain
     final.tree<-best.chain$tree[[length(best.chain$tree)]]
@@ -200,7 +201,7 @@ get_best_tree<-function(get.trees.out,
                    "posteriors"=best.chain$posteriors,
                    "BIC"=BIC,
                    "acceptance.rate"=mean(best.chain$accept),
-                   "mean.maxLogpost"=mean.maxLogPost)
+                   "median.maxLogpost"=median.maxLogPost)
     final.out<-append(final.out,temp.out)
 
     # Update counter to skip to next K (each K has nchains)
@@ -214,12 +215,12 @@ get_best_tree<-function(get.trees.out,
   post.list<-sapply(seq(4,length(final.out),7), function(x) final.out[x])
   BIC.list<-sapply(seq(5,length(final.out),7), function(x) final.out[x])
   accept.list<-sapply(seq(6,length(final.out),7), function(x) final.out[x])
-  mean.maxLogPost.list<-sapply(seq(7,length(final.out),7), function(x) final.out[x])
+  median.maxLogPost.list<-sapply(seq(7,length(final.out),7), function(x) final.out[x])
 
   # Print BIC update to console
   for(i in 1:length(Klist)){
-    print(paste0("k=", Klist[[i]], "; mean of maximized log-posteriors across all chains=",
-                 round(mean.maxLogPost.list[[i]],2),
+    print(paste0("k=", Klist[[i]], "; median of maximized log-posteriors across all chains=",
+                 round(median.maxLogPost.list[[i]],2),
                  "; BIC=", round(BIC.list[i]$BIC,2)))
   }
 
