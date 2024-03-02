@@ -56,20 +56,22 @@ version of the Bayesian information criterion (BIC).
 \details{
 {
 The Bayesian information criterion (BIC) is computed by modifying the
-classical definition \insertCite{Schwarz_1978}{canopy2}. Since the prior is flat, the
-likelihood is proportional to the posterior, so the maximum a posteriori (MAP)
-estimate is equivalent to the maximum likelihood estimate (MLE). The MAP
-estimate is equal to the mode of the posterior distribution and defined as
-the value of the parameter that maximizes the posterior distribution, which
-is the value at which the distribution reaches its highest peak. Thus, we can
-replace the maximized log-likelihood with the maximized log-posterior.
-However, since we have multiple chains, we take the median of this maximized
-value across \code{nchains}.
+classical definition \insertCite{Schwarz_1978}{canopy2}. Since the prior is
+flat, the likelihood is proportional to the posterior, so the maximum a
+posteriori (MAP) estimate is equivalent to the maximum likelihood estimate
+(MLE). The MAP estimate is equal to the mode of the posterior distribution
+and defined as the value of the parameter that maximizes the posterior
+distribution, which is the value at which the distribution reaches its
+highest peak. Thus, we can replace the maximized log-likelihood with the
+maximized log-posterior. To find the posterior evaluated at the MAP estimate,
+one can apply kernel density estimation (KDE) to the posterior estimates.
+Since there are multiple chains, the third quartile (75th percentile) is taken
+across all chains.
 
-\deqn{\text{BIC}_{\text{MAP}} = -2\log\left(\tilde{p}_j(\widehat{\theta}_{\text{MAP}}|y)\right)+p\log(n),}
+\deqn{\text{BIC}_{\text{MAP}} = -2\log\left(\underset{j=1,...,\,J}{Q3}({p}_j(\widehat{\theta}_{\text{MAP}}|y))\right)+p\log(n),}
 
-where \eqn{\tilde{p}_j(\widehat{\theta}_{\text{MAP}}|y)} is the median of the maximized
-posteriors across all MCMC chains,
+where \eqn{\underset{j=1,...,\,J}{Q3}({p}_j(\widehat{\theta}_{\text{MAP}}|y))}
+is the third quartile of the maximized posteriors across all \eqn{J} MCMC chains,
 \eqn{\widehat{\theta}_{\text{MAP}}} denotes the MAP estimate,
 \eqn{y} denotes the observed data, \eqn{p} denotes the number of parameters,
 and \eqn{n} denotes the total sample size.

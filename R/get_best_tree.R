@@ -23,20 +23,22 @@
 #'
 #' @details{
 #' The Bayesian information criterion (BIC) is computed by modifying the
-#' classical definition \insertCite{Schwarz_1978}{canopy2}. Since the prior is flat, the
-#' likelihood is proportional to the posterior, so the maximum a posteriori (MAP)
-#' estimate is equivalent to the maximum likelihood estimate (MLE). The MAP
-#' estimate is equal to the mode of the posterior distribution and defined as
-#' the value of the parameter that maximizes the posterior distribution, which
-#' is the value at which the distribution reaches its highest peak. Thus, we can
-#' replace the maximized log-likelihood with the maximized log-posterior.
-#' However, since we have multiple chains, we take the median of this maximized
-#' value across \code{nchains}.
+#' classical definition \insertCite{Schwarz_1978}{canopy2}. Since the prior is
+#' flat, the likelihood is proportional to the posterior, so the maximum a
+#' posteriori (MAP) estimate is equivalent to the maximum likelihood estimate
+#' (MLE). The MAP estimate is equal to the mode of the posterior distribution
+#' and defined as the value of the parameter that maximizes the posterior
+#' distribution, which is the value at which the distribution reaches its
+#' highest peak. Thus, we can replace the maximized log-likelihood with the
+#' maximized log-posterior. To find the posterior evaluated at the MAP estimate,
+#' one can apply kernel density estimation (KDE) to the posterior estimates.
+#' Since there are multiple chains, the third quartile (75th percentile) is taken
+#' across all chains.
 #'
-#' \deqn{\text{BIC}_{\text{MAP}} = -2\log\left(\tilde{p}_j(\widehat{\theta}_{\text{MAP}}|y)\right)+p\log(n),}
+#' \deqn{\text{BIC}_{\text{MAP}} = -2\log\left(\underset{j=1,...,\,J}{Q3}({p}_j(\widehat{\theta}_{\text{MAP}}|y))\right)+p\log(n),}
 #'
-#' where \eqn{\tilde{p}_j(\widehat{\theta}_{\text{MAP}}|y)} is the median of the maximized
-#' posteriors across all MCMC chains,
+#' where \eqn{\underset{j=1,...,\,J}{Q3}({p}_j(\widehat{\theta}_{\text{MAP}}|y))}
+#' is the third quartile of the maximized posteriors across all \eqn{J} MCMC chains,
 #' \eqn{\widehat{\theta}_{\text{MAP}}} denotes the MAP estimate,
 #' \eqn{y} denotes the observed data, \eqn{p} denotes the number of parameters,
 #' and \eqn{n} denotes the total sample size.
@@ -185,11 +187,11 @@ get_best_tree<-function(get.trees.out,
     # Log-posteriors from best chain
     logPost<-best.chain$posteriors
 
-    # Compute the median of the maximized log-Posteriors across all chains
-    median.maxLogPost<-median(unlist(list.maxLogPost))
+    # Compute the third quartile of the maximized log-Posteriors across all chains
+    q3.maxLogPost<-quantile(unlist(list.maxLogPost), probs=0.75)
 
     # Compute BIC
-    BIC<- -2*median.maxLogPost + K*log(2*M*N+2*M*S)
+    BIC<- -2*q3.maxLogPost + K*log(2*M*N+2*M*S)
 
     # Store the final tree from the best chain
     final.tree<-best.chain$tree[[length(best.chain$tree)]]
@@ -201,7 +203,7 @@ get_best_tree<-function(get.trees.out,
                    "posteriors"=best.chain$posteriors,
                    "BIC"=BIC,
                    "acceptance.rate"=mean(best.chain$accept),
-                   "median.maxLogpost"=median.maxLogPost)
+                   "q3.maxLogpost"=q3.maxLogPost)
     final.out<-append(final.out,temp.out)
 
     # Update counter to skip to next K (each K has nchains)
@@ -215,12 +217,12 @@ get_best_tree<-function(get.trees.out,
   post.list<-sapply(seq(4,length(final.out),7), function(x) final.out[x])
   BIC.list<-sapply(seq(5,length(final.out),7), function(x) final.out[x])
   accept.list<-sapply(seq(6,length(final.out),7), function(x) final.out[x])
-  median.maxLogPost.list<-sapply(seq(7,length(final.out),7), function(x) final.out[x])
+  q3.maxLogPost.list<-sapply(seq(7,length(final.out),7), function(x) final.out[x])
 
   # Print BIC update to console
   for(i in 1:length(Klist)){
-    print(paste0("k=", Klist[[i]], "; median of maximized log-posteriors across all chains=",
-                 round(median.maxLogPost.list[[i]],2),
+    print(paste0("k=", Klist[[i]], "; Q3 of maximized log-posteriors across all chains=",
+                 round(q3.maxLogPost.list[[i]],2),
                  "; BIC=", round(BIC.list[i]$BIC,2)))
   }
 
