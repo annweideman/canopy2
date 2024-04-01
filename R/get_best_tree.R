@@ -188,7 +188,7 @@ get_best_tree<-function(get.trees.out,
     logPost<-best.chain$posteriors
 
     # Compute the third quartile of the maximized log-Posteriors across all chains
-    q3.maxLogPost<-quantile(unlist(list.maxLogPost), probs=0.75)
+    q3.maxLogPost<-stats::quantile(unlist(list.maxLogPost), probs=0.75)
 
     # Compute BIC
     BIC<- -2*q3.maxLogPost + K*log(2*M*N+2*M*S)
