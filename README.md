@@ -35,7 +35,7 @@ Install the current release from CRAN (not recommended). Not published on CRAN a
 install.packages("canopy2")
 ```
 
-Install the devel version from GitHub (HIGHLY recommended, as this will allow you to install any corrected bugs post-publication to CRAN)
+Install the developmental version from GitHub (HIGHLY recommended, as this will allow you to install any corrected bugs post-publication to CRAN)
 
 ```
 # Dependencies
